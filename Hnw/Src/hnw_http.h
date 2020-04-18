@@ -22,7 +22,7 @@
 #include "hnw_define.h"
 
 //http 请求
-struct HnwHttpRequest :public HnwBaseEvent
+struct HnwHttpRequest 
 {
 public:
     std::string method;
@@ -40,14 +40,13 @@ public:
         const std::string& u = "/",
         const std::string& v = "HTTP/1.1")
         :method(m), url(u), version(v)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_REQUEST)
     {
 
     }
 };
 
 //http 回复
-struct HnwHttpResponse:public HnwBaseEvent
+struct HnwHttpResponse
 {
 public:
     //HTTP/1.1 200 OK
@@ -68,7 +67,6 @@ public:
         const std::string& r = "OK"
         )
         : version(v), status_code(s), reason(r)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_REQUEST)
     {
 
     }
@@ -77,7 +75,7 @@ public:
 
 //启动服务器
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartServer(
-    unsigned char local_port,//本地端口
+    unsigned int local_port,//本地端口
     HNW_EVENT_CB cb,
     HNW_HANDLE& handle);
 

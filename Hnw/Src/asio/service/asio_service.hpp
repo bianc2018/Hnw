@@ -142,7 +142,7 @@ namespace hnw
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a HttpClientChannel handle[%I64d]", ch->get_handle());
                 }
-                else if (HNW_CHANNEL_TYPE::UDP == type)
+                else if (HNW_CHANNEL_TYPE::HTTP_SERVER == type)
                 {
                     ch = std::make_shared<HttpServerChannel>(service_, \
                         std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));

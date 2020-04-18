@@ -47,6 +47,7 @@ namespace hnw
                                 EVENT_ERR_CB(ret, "http parser error,ret=" + std::to_string((int)ret));
                                 return;
                             }
+                            return;
                         }
                         else
                         {
@@ -54,58 +55,37 @@ namespace hnw
                             return;
                         }
                     }
-
-                    //其他直接回调
-                    if (cb)
+                    else
                     {
-                        cb(handle, tt, event_data);
+                        //其他直接回调
+                        if (cb)
+                        {
+                            cb(handle, tt, event_data);
+                        }
                     }
                 };
+                if (recv_parser_)
+                    recv_parser_->set_event_cb(event_cb_);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
 
-            ////发送数据
-            //virtual HNW_BASE_ERR_CODE send(std::shared_ptr<void> message, size_t message_size)
-            //{
-            //    if (send_parser_)
-            //    {
-            //        if (message && message_size != 0)
-            //        {
-            //            auto b = PTR_CAST(HnwBaseEvent, message);
-            //            if ((int)b->type == send_parser_->get_event_type())
-            //            {
-            //                HNW_BASE_ERR_CODE ret = HNW_BASE_ERR_CODE::HNW_BASE_NUKNOW_ERROR;
-            //                auto raw = send_parser_->struct_raw_package(message, ret);
-            //                if (HNW_BASE_ERR_CODE::HNW_BASE_OK== ret)
-            //                {
-            //                    auto message_size = raw.size();
-            //                    auto cache = MAKE_SHARED(message_size);
-            //                    if (nullptr == cache)
-            //                    {
-            //                        PRINTFLOG(BL_ERROR, "parser get_cache error,size=%d", message_size);
-            //                        return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
-            //                    }
-            //                    memcpy(cache.get(), raw.c_str(), message_size);
-            //                    return async_send(message, message_size);
-            //                }
-            //                else
-            //                {
-            //                    EVENT_ERR_CB(ret\
-            //                        , "http struct message fail ret=" + std::to_string((int)ret));
-            //                    return HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_BAD_MESSAGE\
-            //                    , "http bad message");
-            //                return HNW_BASE_ERR_CODE::HNW_HTTP_BAD_MESSAGE;
-            //            }
-            //        }
-            //        return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-            //    }
-            //    return HNW_BASE_ERR_CODE::HNW_HTTP_EMPTY_PARSER;
-            //}
+            //日志回调
+            virtual HNW_BASE_ERR_CODE set_log_cb(HNW_LOG_CB cb)
+            {
+                log_cb_ = cb;
+                if (recv_parser_)
+                    recv_parser_->set_log_cb(log_cb_);
+                return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
+
+            //buff申请回调
+            virtual HNW_BASE_ERR_CODE set_shared_cb(HNW_MAKE_SHARED_CB cb)
+            {
+                make_shared_ = cb;
+                if (recv_parser_)
+                    recv_parser_->set_make_shared_cb(make_shared_);
+                return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
         public:
             bool set_recv_parser_ptr(std::shared_ptr<parser::ParserBase> p)
             {

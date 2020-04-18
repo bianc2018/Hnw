@@ -63,7 +63,7 @@ namespace hnw
         }
 
         //Á¬½Ó
-        virtual HNW_BASE_ERR_CODE accept(const NetPoint& remote)
+        virtual HNW_BASE_ERR_CODE accept()
         {
             PRINTFLOG(BL_DEBUG, "this channel no support :accept");
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;

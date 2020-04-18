@@ -11,21 +11,23 @@ namespace hnw
 	{
 		enum PSTATUS
 		{
-			START_LINE1 = 1,
-			START_LINE2 = 2,
-			START_LINE3 = 3,
-			HEAD_KEY = 4,
-			HEAD_VALUE = 5,
-			BODY = 6,
-			CHUNKED_LEN = 7,
-			CHUNKED_DATA = 8,
-			OVER = 9,
+			START_LINE,
+			START_LINE1,
+			START_LINE2,
+			START_LINE3,
+			HEAD,
+			HEAD_KEY,
+			HEAD_VALUE,
+			BODY,
+			CHUNKED_LEN,
+			CHUNKED_DATA,
+			OVER,
 			PERROR = -1,
 		};
 
 		const unsigned char CR('\r');
 		const unsigned char LF('\n');
-		const unsigned char SPACE(' ');
+		const std::string SPACE(" ");
 		
 		//冒号  colon
 		const unsigned char COLON(':');
@@ -47,6 +49,47 @@ namespace hnw
 		const std::string HTTP_CHUNKED("chunked");
 		
 		
+		//解析函数
+		static std::vector<std::string> split(const std::string& src, const std::string& splitor)
+		{
+			std::vector<std::string> res;
+			auto beg = 0;
+			auto pos = std::string::npos;
+			do
+			{
+				pos = src.find(splitor,beg);
+
+				if (std::string::npos == pos)
+				{
+					res.push_back(src.substr(beg));
+					break;
+				}
+				else
+				{
+					//auto t = src.substr(beg, pos - beg);
+					//截取
+					res.push_back(src.substr(beg,pos-beg));
+
+					//步进
+					beg = pos + splitor.size();
+				}
+
+			} while (true);
+
+			return res;
+		}
+
+		//获取对应的MIME
+		static std::string http_mime(const std::string& ext, const std::string& defualt_d = HTML_MIME)
+		{
+			return defualt_d;
+		}
+
+		//获取状态说明
+		static std::string http_reasion(const std::string& status, const std::string& defualt_r = "NONE")
+		{
+			return defualt_r;
+		}
 	}
 }
 #endif // !HNW_HTTP_PARSER_DEFINE_HPP_

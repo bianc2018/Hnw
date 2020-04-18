@@ -52,14 +52,14 @@ namespace hnw
         }
 
         //½¨Á¢Á´½Ó
-        virtual HNW_BASE_ERR_CODE accept(HNW_HANDLE handle, const NetPoint& remote)
+        virtual HNW_BASE_ERR_CODE accept(HNW_HANDLE handle)
         {
             auto ch = get_channel(handle);
             if (ch)
             {
-                PRINTFLOG(BL_INFO, "accept channel handle=%I64d remote=%s:%d", \
-                    handle, remote.ip.c_str(), remote.port);
-                return ch->accept(remote);
+                PRINTFLOG(BL_INFO, "accept channel handle=%I64d ", \
+                    handle);
+                return ch->accept();
             }
             PRINTFLOG(BL_ERROR, "accept handle=%I64d not find,this handle is invaild", \
                 handle);

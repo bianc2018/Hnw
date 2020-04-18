@@ -126,6 +126,11 @@ enum class HNW_BASE_ERR_CODE
     //http 键值重复
     HNW_HTTP_PARSER_KEY_IS_NO_EMPTY,
 
+    //http 错误的行头
+    HNW_HTTP_PARSER_BAD_START_LINE,
+
+    //http 错误的head
+    HNW_HTTP_PARSER_BAD_HEAD_KEY,
     //http 键值空
     HNW_HTTP_PARSER_KEY_IS_EMPTY,
 
@@ -177,6 +182,10 @@ struct NetPoint
 
 //链接句柄
 typedef std::int64_t HNW_HANDLE;
+//无效的
+#ifndef HNW_INVALID_HANDLE 
+#define HNW_INVALID_HANDLE std::int64_t(-1)
+#endif
 
 #define PTR_CAST(x,p) std::reinterpret_pointer_cast<x>(p)
 //转换为 char
@@ -214,53 +223,47 @@ enum class HNW_BASE_EVENT_TYPE
     HNW_BASE_CLOSED,
 };
 
-/*
-    基础事件类
-*/
-struct HnwBaseEvent
-{
-    HNW_BASE_EVENT_TYPE type;
-    HnwBaseEvent(HNW_BASE_EVENT_TYPE t) :type(t)
-    {
-
-    }
-};
+///*
+//    基础事件类
+//*/
+//struct HnwBaseEvent
+//{
+//    HNW_BASE_EVENT_TYPE type;
+//    HnwBaseEvent(HNW_BASE_EVENT_TYPE t) :type(t)
+//    {
+//
+//    }
+//};
 
 //HNW_BASE_ERROR 错误数据
-struct HnwBaseErrorEvent:public HnwBaseEvent
+struct HnwBaseErrorEvent
 {
     int code;
     std::string message;
     HnwBaseErrorEvent() :code((int)HNW_BASE_ERR_CODE::HNW_BASE_OK)
-        ,HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR)
     {}
     HnwBaseErrorEvent(int c, const std::string& msg = "")
         :code(c), message(msg)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR)
     {}
 };
 //HNW_BASE_ACCEPT
-struct HnwBaseAcceptEvent :public HnwBaseEvent
+struct HnwBaseAcceptEvent
 {
     HNW_HANDLE client;
     HnwBaseAcceptEvent() :client(-1)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT)
     {}
     HnwBaseAcceptEvent(HNW_HANDLE cli) :client(cli)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT)
     {}
 };
 
 //HNW_BASE_RECV_DATA
-struct HnwBaseRecvDataEvent :public HnwBaseEvent
+struct HnwBaseRecvDataEvent 
 {
     char* buff;
     size_t buff_len;
     HnwBaseRecvDataEvent() :buff(nullptr), buff_len(0)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT)
     {}
     HnwBaseRecvDataEvent(char* b, size_t l) :buff(b), buff_len(l)
-        , HnwBaseEvent(HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT)
     {}
 };
 

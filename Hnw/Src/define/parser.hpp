@@ -9,6 +9,10 @@
 #include <string>
 #include <queue>
 #include <mutex>
+#include <map>
+
+#include "define.hpp"
+
 #include "../hnw_define.h"
 
 //注册类成员函数
@@ -28,7 +32,7 @@ namespace hnw
 		class ParserBase 
 		{
 		public:
-			ParserBase()
+			ParserBase(HNW_HANDLE handle):handle_(handle)
 			{
 				reg_parser_default_cb([this](const unsigned char ch) {
 					return default_parser(ch);
@@ -83,7 +87,7 @@ namespace hnw
 				return HNW_BASE_ERR_CODE::HNW_HTTP_PARSER_CB_IS_EMPTY;
 			}
 
-			virtual HNW_BASE_ERR_CODE default_parser(const const unsigned char ch)
+			virtual HNW_BASE_ERR_CODE default_parser(const unsigned char ch)
 			{
 				PRINTFLOG(BL_ERROR, "default_parser fail status=%d",
 					 parser_status_);
@@ -115,6 +119,12 @@ namespace hnw
 				event_cb_ = cb;
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}
+
+			//获取句柄
+			virtual HNW_HANDLE get_handle()
+			{
+				return handle_;
+			}
 		protected:
 			//回调函数
 			HNW_MAKE_SHARED_CB make_shared_;
@@ -122,6 +132,8 @@ namespace hnw
 			HNW_LOG_CB log_cb_;
 
 			HNW_EVENT_CB event_cb_;
+
+			HNW_HANDLE handle_;
 		protected:
 			int parser_status_;
 

@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.8)
 #project ("HnwBase")
 include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 
-add_library(Hnw SHARED  "hnw_base.cpp" "hnw_base.h")
+add_library(Hnw SHARED  "hnw_base.cpp" "hnw_base.h" "hnw_http.h" "hnw_http.cpp")
 
 SET_TARGET_PROPERTIES(Hnw PROPERTIES VERSION 2.0)
 

@@ -99,7 +99,7 @@ namespace hnw
             }
 
             //Á¬½Ó
-            virtual HNW_BASE_ERR_CODE accept(const NetPoint& remote)
+            virtual HNW_BASE_ERR_CODE accept()
             {
                 PRINTFLOG(BL_INFO, "[%I64d] start async_one_accept thread num=%d", handle_, accept_num_);
                 for (size_t i = 0; i < accept_num_; ++i)

@@ -26,7 +26,9 @@ namespace hnw
         public:
             HttpClientChannel(io_service& service)
                 :ProtocolClientBaseChannel(service)
-            {}
+            {
+                set_recv_parser(hnw::boost_asio::EMHttpParserType::RESPONSE);
+            }
             virtual ~HttpClientChannel()
             {
 
@@ -38,10 +40,10 @@ namespace hnw
                 switch (type)
                 {
                 case hnw::boost_asio::EMHttpParserType::REQUEST:
-                    set_recv_parser_ptr(std::make_shared<parser::HttpRequestParser>());
+                    set_recv_parser_ptr(std::make_shared<parser::HttpRequestParser>(get_handle()));
                     break;
                 case hnw::boost_asio::EMHttpParserType::RESPONSE:
-                    set_recv_parser_ptr(std::make_shared<parser::HttpResponseParser>());
+                    set_recv_parser_ptr(std::make_shared<parser::HttpResponseParser>(get_handle()));
                     break;
                 default:
                     return false;
@@ -84,7 +86,7 @@ namespace hnw
         //public:
         //    
         //    //设置事件回调
-        //    virtual HNW_BASE_ERR_CODE set_event_cb(HNW_EVENT_CB cb)
+        ////    virtual HNW_BASE_ERR_CODE set_event_cb(HNW_EVENT_CB cb)
         //    {
         //        event_cb_ = [cb,this](std::int64_t handle, \
         //            int tt, std::shared_ptr<void> event_data)mutable

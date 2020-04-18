@@ -18,6 +18,12 @@ target_link_libraries(HnwUdp  Hnw)
 add_executable(HnwDns "dns/main.cpp")
 target_link_libraries(HnwDns  Hnw)
 
+add_executable(HnwHttpClient "httpclient/main.cpp")
+target_link_libraries(HnwHttpClient  Hnw)
+
+add_executable(HnwHttpServer "httpserver/main.cpp")
+target_link_libraries(HnwHttpServer  Hnw)
+
 install(TARGETS HnwTcpClient HnwTcpServer HnwUdp HnwDns
 	RUNTIME DESTINATION Hnw/Example
 )
