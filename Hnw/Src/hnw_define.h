@@ -187,13 +187,9 @@ typedef std::int64_t HNW_HANDLE;
 #define HNW_INVALID_HANDLE std::int64_t(-1)
 #endif
 
-#define PTR_CAST(x,p) std::reinterpret_pointer_cast<x>(p)
-//转换为 char
-#define EVENT_RECV(buff) std::reinterpret_pointer_cast<char>(buff)
-
-//accept 事件数据
-#define EVENT_ACCEPT(buff) std::reinterpret_pointer_cast<HNW_HANDLE>(buff)
-
+//#define PTR_CAST(x,p) std::reinterpret_pointer_cast<x>(p)
+#define PTR_CAST(x,p) std::static_pointer_cast<x>(p)
+//static_pointer_cast
 
 //网络事件回调类型
 enum class HNW_BASE_EVENT_TYPE

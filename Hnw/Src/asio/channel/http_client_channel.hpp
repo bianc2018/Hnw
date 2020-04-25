@@ -8,7 +8,9 @@
 
 #include "../parser/http/http_request_parser.hpp"
 #include "../parser/http/http_response_parser.hpp"
+
 #include "protocol_base_channel.hpp"
+
 namespace hnw
 {
     namespace boost_asio
@@ -20,12 +22,14 @@ namespace hnw
             RESPONSE,
         };
 
+        
+        //class HttpClientChannel :public ProtocolClientBaseChannel<ASIOTcpClientChannel>
         class HttpClientChannel :public ProtocolClientBaseChannel<ASIOTcpClientChannel>
         {
 
         public:
             HttpClientChannel(io_service& service)
-                :ProtocolClientBaseChannel(service)
+                :ProtocolClientBaseChannel<ASIOTcpClientChannel>(service)
             {
                 set_recv_parser(hnw::boost_asio::EMHttpParserType::RESPONSE);
             }

@@ -44,9 +44,11 @@ HNW_HANDLE handle = -1;
 int main(int argc, char* argv[])
 {
    // HnwBase_Init();
-
+    NetPoint local;
+    local.ip = "0.0.0.0";
+    local.port = 8081;
     //初始化通道
-    auto ret = HnwBase_Add_Channnel(HNW_CHANNEL_TYPE::UDP, { "0.0.0.0",8081 }, handle);
+    auto ret = HnwBase_Add_Channnel(HNW_CHANNEL_TYPE::UDP, local, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {
         printf("add channel ok,handle=%lld\n", handle);
@@ -61,7 +63,10 @@ int main(int argc, char* argv[])
     HnwBase_SetEvntCB(handle, event_cb);
 
     //连接
-    NetPoint dst = { "192.168.1.100",8082 };
+    NetPoint dst;
+    dst.ip = "192.168.1.100";
+    dst.port = 8082;
+  //  NetPoint dst = { "192.168.1.100",8082 };
     ret = HnwBase_Connect(handle, dst);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {

@@ -6,7 +6,6 @@
 #define HNW_PROTOCOL_BASE_HPP_
 
 #include "../../define/parser.hpp"
-
 namespace hnw
 {
     namespace boost_asio
@@ -31,7 +30,7 @@ namespace hnw
             //设置事件回调
             virtual HNW_BASE_ERR_CODE set_event_cb(HNW_EVENT_CB cb)
             {
-                event_cb_ = [cb, this](std::int64_t handle, \
+                this->event_cb_ = [cb, this](std::int64_t handle, \
                     int tt, std::shared_ptr<void> event_data)mutable
                 {
                     HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)tt;
@@ -44,14 +43,22 @@ namespace hnw
                             auto ret = recv_parser_->input_data((const unsigned char*)data->buff, data->buff_len);
                             if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
                             {
-                                EVENT_ERR_CB(ret, "http parser error,ret=" + std::to_string((int)ret));
+                               // EVENT_ERR_CB(ret, "http parser error,ret=" + std::to_string((int)ret));
+                                if (this->event_cb_)\
+                                    this->event_cb_((std::int64_t)this->get_handle(),
+                                        (int)HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR,
+                                        std::make_shared<HnwBaseErrorEvent>((int)ret, "http parser error,ret=" + std::to_string((int)ret)));
                                 return;
                             }
                             return;
                         }
                         else
                         {
-                            EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_EMPTY_PARSER, "http recv_parser_ is empty");
+                            //EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_EMPTY_PARSER, "http recv_parser_ is empty");
+                            if (this->event_cb_)\
+                                this->event_cb_((std::int64_t)this->get_handle(),
+                                    (int)HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR,
+                                    std::make_shared<HnwBaseErrorEvent>((int)(HNW_BASE_ERR_CODE::HNW_HTTP_EMPTY_PARSER), "http recv_parser_ is empty"));
                             return;
                         }
                     }
@@ -65,34 +72,34 @@ namespace hnw
                     }
                 };
                 if (recv_parser_)
-                    recv_parser_->set_event_cb(event_cb_);
+                    recv_parser_->set_event_cb(this->event_cb_);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
 
             //日志回调
             virtual HNW_BASE_ERR_CODE set_log_cb(HNW_LOG_CB cb)
             {
-                log_cb_ = cb;
+                this->log_cb_ = cb;
                 if (recv_parser_)
-                    recv_parser_->set_log_cb(log_cb_);
+                    recv_parser_->set_log_cb(this->log_cb_);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
 
             //buff申请回调
             virtual HNW_BASE_ERR_CODE set_shared_cb(HNW_MAKE_SHARED_CB cb)
             {
-                make_shared_ = cb;
+                this->make_shared_ = cb;
                 if (recv_parser_)
-                    recv_parser_->set_make_shared_cb(make_shared_);
+                    recv_parser_->set_make_shared_cb(this->make_shared_);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
         public:
             bool set_recv_parser_ptr(std::shared_ptr<parser::ParserBase> p)
             {
                 recv_parser_ = p;
-                recv_parser_->set_log_cb(log_cb_);
-                recv_parser_->set_make_shared_cb(make_shared_);
-                recv_parser_->set_event_cb(event_cb_);
+                recv_parser_->set_log_cb(this->log_cb_);
+                recv_parser_->set_make_shared_cb(this->make_shared_);
+                recv_parser_->set_event_cb(this->event_cb_);
                 return true;
             }
             //bool set_send_parser_ptr(std::shared_ptr<parser::ParserBase> p)
@@ -107,6 +114,15 @@ namespace hnw
             //接收解析器
             std::shared_ptr<parser::ParserBase> recv_parser_/*, send_parser_*/;
         };
+
+        ////基于tcp
+        //template<>
+        //class ProtocolClientBaseChannel<ASIOTcpClientChannel>
+        //{ // 部分类型明确化，为偏特化类
+        //public:
+
+        //
+        //};
     }
 }
 #endif

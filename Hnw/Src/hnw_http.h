@@ -20,6 +20,7 @@
 #endif
 
 #include "hnw_define.h"
+#include <map>
 
 //http 请求
 struct HnwHttpRequest 
@@ -95,6 +96,38 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Response(
     HNW_HANDLE handle, std::shared_ptr<HnwHttpResponse> req);
 
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Close(HNW_HANDLE handle);
+
+
+//简单的接口
+
+//简单的http 服务器
+typedef std::function<void(const std::shared_ptr<HnwHttpRequest>& req, const std::shared_ptr<HnwHttpResponse>& res)> HTTP_SERVER_CB;
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartSimpleServer(unsigned int local_port,//本地端口
+    HTTP_SERVER_CB cb);
+
+//简单的客户端请求
+typedef std::function<void(const std::shared_ptr<HnwHttpResponse>& req, const std::shared_ptr<HnwHttpRequest>& res)> HTTP_CLIENT_CB;
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartSimpleSession(const std::string host,//本地端口
+    HTTP_CLIENT_CB cb);
+
+//get
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Get(const std::string &url,std::string&body);
+
+//post
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Post(const std::string& url,const std::string& msg, std::string& response);
+
+
+//功能函数
+
+struct UrlParam
+{
+    std::string protocol;
+    std::string host;
+    int port = 80;
+    std::string path;
+    std::map<std::string,std::string> params;
+};
+
 #endif // !BNS_H_
 
 

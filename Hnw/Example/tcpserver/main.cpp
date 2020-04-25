@@ -49,7 +49,10 @@ int main(int argc, char* argv[])
    // HnwBase_Init();
 
     //初始化通道
-    auto ret = HnwBase_Add_Channnel(HNW_CHANNEL_TYPE::TCP_SERVER, {"0.0.0.0",8081}, handle);
+    NetPoint local;
+    local.ip = "0.0.0.0";
+    local.port = 8081;
+    auto ret = HnwBase_Add_Channnel(HNW_CHANNEL_TYPE::TCP_SERVER, local, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {
         printf("add channel ok,handle=%lld\n", handle);

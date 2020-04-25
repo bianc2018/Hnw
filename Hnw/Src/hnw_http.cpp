@@ -84,3 +84,145 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Close(HNW_HANDLE handle)
 {
     return  HnwBase_Close(handle);
 }
+
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartSimpleServer(unsigned int local_port, HTTP_SERVER_CB cb)
+{
+    HNW_HANDLE handle;
+    auto event_cb = [cb](std::int64_t handle, \
+        int t,
+        std::shared_ptr<void> event_data)
+    {
+        HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)t;
+      
+        if (HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT == type)
+        {
+            //auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+            printf("handle:%lld accept  \n", handle);
+        }
+        else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_REQUEST == type)
+        {
+            auto request = PTR_CAST(HnwHttpRequest, event_data);
+            
+            auto response = std::make_shared<HnwHttpResponse>();
+
+            response->body = request->body;
+
+            if (cb)
+            {
+                cb(request, response);
+            }
+
+            HnwHttp_Response(handle, response);
+        }
+    };
+    //初始化通道
+    auto ret = HnwHttp_StartServer(8080, event_cb, handle);
+    if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
+    {
+        printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
+    }
+    else
+    {
+        printf("HnwHttp_StartServer fail,ret =%d \n", ret);
+        return ret;
+    }
+    return  ret;
+}
+
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartSimpleSession(const std::string host, HTTP_CLIENT_CB cb)
+{
+    HNW_HANDLE handle;
+    auto event_cb = [cb](std::int64_t handle, \
+        int t,
+        std::shared_ptr<void> event_data)
+    {
+        HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)t;
+
+        if (HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT == type)
+        {
+            //auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+            printf("handle:%lld accept  \n", handle);
+        }
+        else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE == type)
+        {
+            auto response = PTR_CAST( HnwHttpResponse, event_data);
+
+            auto request = std::make_shared<HnwHttpRequest>();
+
+            response->body = request->body;
+
+            if (cb)
+            {
+                cb(response, request);
+            }
+
+            HnwHttp_Request(handle, request);
+        }
+    };
+    //初始化通道
+    auto ret = HnwHttp_StartSession(host, event_cb, handle);
+    if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
+    {
+        printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
+    }
+    else
+    {
+        printf("HnwHttp_StartServer fail,ret =%d \n", ret);
+        return ret;
+    }
+    return  ret;
+}
+
+//HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Get(const std::string& url,
+//    std::string& body)
+//{
+//    auto request = std::make_shared<HnwHttpRequest>();
+//    
+//    request->url = url;
+//
+//    HNW_HANDLE handle;
+//    auto event_cb = [body](std::int64_t handle, \
+//        int t,
+//        std::shared_ptr<void> event_data)
+//    {
+//        HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)t;
+//
+//        if (HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT == type)
+//        {
+//            //auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+//            printf("handle:%lld accept  \n", handle);
+//        }
+//        else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE == type)
+//        {
+//            auto response = PTR_CAST(HnwHttpResponse, event_data);
+//
+//            auto request = std::make_shared<HnwHttpRequest>();
+//
+//            response->body = request->body;
+//
+//            if (cb)
+//            {
+//                cb(response, request);
+//            }
+//
+//            HnwHttp_Request(handle, request);
+//        }
+//    };
+//    //初始化通道
+//    auto ret = HnwHttp_StartSession(host, event_cb, handle);
+//    if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
+//    {
+//        printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
+//    }
+//    else
+//    {
+//        printf("HnwHttp_StartServer fail,ret =%d \n", ret);
+//        return ret;
+//    }
+//    return  ret;
+//}
+//
+//HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Post(const std::string& url, const std::string& msg, std::string& response)
+//{
+//    return HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE();
+//}

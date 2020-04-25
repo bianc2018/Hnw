@@ -6,7 +6,9 @@
 
 #include "../hnw_base.h"
 #include <mutex>
+#include <thread>
 #include <string.h>
+#include <cstddef>
 
 #define PRINTF_BUFF_SIZE 2048
 static std::mutex PRINTFLOG_LOCK;

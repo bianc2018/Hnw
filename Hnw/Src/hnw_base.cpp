@@ -5,6 +5,7 @@
 static hnw::boost_asio::AsioService service;
 #endif
 
+
 //HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Init()
 //{
 //    return  service.init();

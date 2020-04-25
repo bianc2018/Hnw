@@ -7,7 +7,7 @@ include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src)
 
 add_executable(HnwTcpClient "tcpclient/main.cpp")
-target_link_libraries(HnwTcpClient  Hnw)
+target_link_libraries(HnwTcpClient  Hnw )
 
 add_executable(HnwTcpServer "tcpserver/main.cpp")
 target_link_libraries(HnwTcpServer  Hnw)

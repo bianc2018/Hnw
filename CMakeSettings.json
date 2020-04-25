@@ -23,18 +23,18 @@
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "inheritEnvironments": [ "linux_x64" ],
-      "remoteMachineName": "${defaultRemoteMachineName}",
+      "remoteMachineName": "2006744350;192.168.1.103 (username=root, port=22, authentication=Password)",
       "remoteCMakeListsRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/src",
       "remoteBuildRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/build/${name}",
       "remoteInstallRoot": "$HOME/.vs/${projectDirName}/${workspaceHash}/out/install/${name}",
       "remoteCopySources": true,
       "rsyncCommandArgs": "-t --delete --delete-excluded",
-      "remoteCopyBuildOutput": false,
-      "remoteCopySourcesMethod": "rsync",
+      "remoteCopyBuildOutput": true,
+      "remoteCopySourcesMethod": "sftp",
       "addressSanitizerRuntimeFlags": "detect_leaks=0",
       "variables": [],
       "intelliSenseMode": "linux-gcc-x64",
-      "addressSanitizerEnabled": true
+      "addressSanitizerEnabled": false
     }
   ]
 }

@@ -58,7 +58,9 @@ int main(int argc, char* argv[])
     HnwBase_SetEvntCB(handle, event_cb);
 
     //Á¬½Ó
-    NetPoint dst = { "192.168.1.100",8082 };
+    NetPoint dst; 
+    dst.ip = "192.168.1.100";
+    dst.port = 8082;
     ret = HnwBase_Connect(handle, dst);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {
