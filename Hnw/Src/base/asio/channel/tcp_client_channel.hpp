@@ -127,7 +127,7 @@ namespace hnw
                 return socket_.is_open();
             }
 
-            bool active()
+            bool after_accept()
             {
                 //链接已建立
                 bconn_ = true;

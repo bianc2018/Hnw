@@ -4,25 +4,26 @@ cmake_minimum_required (VERSION 3.8)
 
 include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 
-include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src)
+include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src/base)
+include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src/http)
 
 add_executable(HnwTcpClient "tcpclient/main.cpp")
-target_link_libraries(HnwTcpClient  Hnw )
+target_link_libraries(HnwTcpClient  HnwBase )
 
 add_executable(HnwTcpServer "tcpserver/main.cpp")
-target_link_libraries(HnwTcpServer  Hnw)
+target_link_libraries(HnwTcpServer  HnwBase)
 
 add_executable(HnwUdp "udp/main.cpp")
-target_link_libraries(HnwUdp  Hnw)
+target_link_libraries(HnwUdp  HnwBase)
 
 add_executable(HnwDns "dns/main.cpp")
-target_link_libraries(HnwDns  Hnw)
+target_link_libraries(HnwDns  HnwBase)
 
 add_executable(HnwHttpClient "httpclient/main.cpp")
-target_link_libraries(HnwHttpClient  Hnw)
+target_link_libraries(HnwHttpClient  HnwHttp)
 
 add_executable(HnwHttpServer "httpserver/main.cpp")
-target_link_libraries(HnwHttpServer  Hnw)
+target_link_libraries(HnwHttpServer  HnwHttp)
 
 install(TARGETS HnwTcpClient HnwTcpServer HnwUdp HnwDns
 	RUNTIME DESTINATION Hnw/Example

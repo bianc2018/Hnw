@@ -111,37 +111,42 @@ enum class HNW_BASE_ERR_CODE
     //服务已停止
     HNW_BASE_SERVICE_IS_STOPED,
 
-    //http 解析失败
-    HNW_HTTP_PARSER_FAIL,
+    //SSL 客户端 握手失败
+    HNW_BASE_SSL_CLIENT_HANDSHAKE_FAIL,
+    //SSL 服务端端 握手失败
+    HNW_BASE_SSL_SERVER_HANDSHAKE_FAIL,
 
-    //空的解析器
-    HNW_HTTP_EMPTY_PARSER,
+    ////http 解析失败
+    //HNW_HTTP_PARSER_FAIL,
 
-    //http 主机是无效的
-    HNW_HTTP_HOST_IS_IVAILD,
+    ////空的解析器
+    //HNW_HTTP_EMPTY_PARSER,
 
-    //http 错误的报文
-    HNW_HTTP_BAD_MESSAGE,
+    ////http 主机是无效的
+    //HNW_HTTP_HOST_IS_IVAILD,
 
-    //http 键值重复
-    HNW_HTTP_PARSER_KEY_IS_NO_EMPTY,
+    ////http 错误的报文
+    //HNW_HTTP_BAD_MESSAGE,
 
-    //http 错误的行头
-    HNW_HTTP_PARSER_BAD_START_LINE,
+    ////http 键值重复
+    //HNW_HTTP_PARSER_KEY_IS_NO_EMPTY,
 
-    //http 错误的head
-    HNW_HTTP_PARSER_BAD_HEAD_KEY,
-    //http 键值空
-    HNW_HTTP_PARSER_KEY_IS_EMPTY,
+    ////http 错误的行头
+    //HNW_HTTP_PARSER_BAD_START_LINE,
 
-    //http 解析回调为空
-    HNW_HTTP_PARSER_CB_IS_EMPTY,
-    
-    //http 解析回调不可以是默认的
-    HNW_HTTP_PARSER_CB_IS_DEFAULT,
+    ////http 错误的head
+    //HNW_HTTP_PARSER_BAD_HEAD_KEY,
+    ////http 键值空
+    //HNW_HTTP_PARSER_KEY_IS_EMPTY,
 
-    //http 报文组装失败
-    HNW_HTTP_STRUCT_MESSAGE_FAIL,
+    ////http 解析回调为空
+    //HNW_HTTP_PARSER_CB_IS_EMPTY,
+    //
+    ////http 解析回调不可以是默认的
+    //HNW_HTTP_PARSER_CB_IS_DEFAULT,
+
+    ////http 报文组装失败
+    //HNW_HTTP_STRUCT_MESSAGE_FAIL,
 
     //未知错误
     HNW_BASE_NUKNOW_ERROR = -9999,
@@ -162,11 +167,17 @@ enum class HNW_CHANNEL_TYPE
     //udp
     UDP,
 
-    //http 客户端
-    HTTP_CLIENT,
+    //SSL 客户端
+    SSL_CLIENT,
+    //SSL 服务端
+    SSL_SERVER,
 
-    //http 服务端
-    HTTP_SERVER
+
+    ////http 客户端
+    //HTTP_CLIENT,
+
+    ////http 服务端
+    //HTTP_SERVER
 };
 
 //节点

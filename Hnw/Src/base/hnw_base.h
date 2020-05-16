@@ -13,11 +13,6 @@ typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_L
 //内存申请回调
 typedef std::function<std::shared_ptr<char>(size_t memory_size)> HNW_MAKE_SHARED_CB;
 
-////初始化
-//HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Init();
-//
-////反初始化
-//HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_DInit();
 
 //增加通道
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Add_Channnel(HNW_CHANNEL_TYPE type\
@@ -47,6 +42,9 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetLogCB(HNW_LOG_CB cb);
 
 //设置缓存回调
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetMakeSharedCB(HNW_MAKE_SHARED_CB cb);
+
+//配置项
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int config_type, void* data, size_t data_len);
 
 //查询dns
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string &host,

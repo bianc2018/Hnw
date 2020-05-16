@@ -10,8 +10,12 @@
 #include "../channel/tcp_client_channel.hpp"
 #include "../channel/tcp_server_channel.hpp"
 #include "../channel/udp_channel.hpp"
-#include "../channel/http_client_channel.hpp"
-#include "../channel/http_server_channel.hpp"
+#ifdef _USE_OPENSSL
+#include "../channel/ssl_client_channel.hpp"
+#include "../channel/ssl_server_channel.hpp"
+#endif
+//#include "../channel/http_client_channel.hpp"
+//#include "../channel/http_server_channel.hpp"
 
 namespace hnw
 {
@@ -136,7 +140,22 @@ namespace hnw
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a UdpChannel handle[%I64d]", ch->get_handle());
                 }
-                else if (HNW_CHANNEL_TYPE::HTTP_CLIENT == type)
+#ifdef _USE_OPENSSL
+                else if (HNW_CHANNEL_TYPE::SSL_CLIENT == type)
+                {
+                    ch = std::make_shared<ASIOSSLClientChannel>(service_);
+                    if (ch)
+                        PRINTFLOG(BL_DEBUG, "new a SSLClientChannel handle[%I64d]", ch->get_handle());
+                }
+                else if (HNW_CHANNEL_TYPE::SSL_SERVER == type)
+                {
+                    ch = std::make_shared<ASIOSSLServerChannel>(service_, \
+                        std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
+                    if (ch)
+                        PRINTFLOG(BL_DEBUG, "new a TcpServerChannel handle[%I64d]", ch->get_handle());
+                }
+#endif
+               /* else if (HNW_CHANNEL_TYPE::HTTP_CLIENT == type)
                 {
                     ch = std::make_shared<HttpClientChannel>(service_);
                     if (ch)
@@ -148,7 +167,7 @@ namespace hnw
                         std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a HttpServerChannel handle[%I64d]", ch->get_handle());
-                }
+                }*/
                 else
                 {
                     PRINTFLOG(BL_ERROR, "no support type=%d", type);

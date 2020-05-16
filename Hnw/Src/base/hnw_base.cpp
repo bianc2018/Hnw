@@ -5,6 +5,7 @@
 static hnw::boost_asio::AsioService service;
 #endif
 
+//#include <boost/asio/ssl.hpp>
 
 //HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Init()
 //{
@@ -18,6 +19,7 @@ static hnw::boost_asio::AsioService service;
 
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Add_Channnel(HNW_CHANNEL_TYPE type, const NetPoint& local, HNW_HANDLE& handle)
 {
+    
     return  service.add_channel(type,local,handle);
 }
 
@@ -60,6 +62,11 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetLogCB(HNW_LOG_CB cb)
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetMakeSharedCB(HNW_MAKE_SHARED_CB cb)
 {
     return  service.set_make_shared_cb(cb);
+}
+
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int config_type, void* data, size_t data_len)
+{
+    return service.config(handle, config_type, data, data_len);
 }
 
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string& host, std::vector<NetPoint>& addr, const std::string& service_d)

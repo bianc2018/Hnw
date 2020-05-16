@@ -83,11 +83,23 @@ namespace hnw
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }
 
+
+        //配置
+        virtual HNW_BASE_ERR_CODE config(int config_type,void *data,size_t data_len)
+        {
+            PRINTFLOG(BL_DEBUG, "this channel no support :config");
+            return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
+
+
+
         //获取句柄
         virtual HNW_HANDLE get_handle()
         {
             return handle_;
         }
+
+
     protected:
         //测试节点
         static bool check_endpoint(const NetPoint& point)

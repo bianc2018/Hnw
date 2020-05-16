@@ -22,7 +22,7 @@ namespace hnw
             ASIOTcpServerChannel(io_service& service, ACCEPT_CHANNEL_FN cb) 
                 :service_(service), acceptor_(service), accept_num_(1), accept_cb_(cb)
             {}
-            ~ASIOTcpServerChannel()
+            virtual ~ASIOTcpServerChannel()
             {
                 close();
             }
@@ -193,7 +193,7 @@ namespace hnw
                         if (cli->is_open())
                         {
                             //协议栈异步处理连接
-                            cli->active();
+                            cli->after_accept();
                             PRINTFLOG(BL_DEBUG, "%I64d accept a clent[%I64d] "\
                                 , handle_, cli->get_handle());
 
@@ -219,7 +219,7 @@ namespace hnw
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
 
-        private:
+       // private:
             //接收请求数目
             size_t accept_num_;
 

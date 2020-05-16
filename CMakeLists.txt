@@ -10,7 +10,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Bin)
 
+set(HNW_VERSION 1.1.0)
 set(CMAKE_CXX_STANDARD 11)
+
 
 if(WIN32)
       message("WIN32 编译设置")
@@ -25,6 +27,6 @@ endif()
 
 # 包含子项目。
 #add_subdirectory ("./Hnw")
-add_subdirectory ("./Hnw/Src")
+add_subdirectory ("./Hnw/Src/base")
 add_subdirectory ("./Hnw/Example")
 

@@ -82,6 +82,35 @@ namespace hnw
             return ch->close();
         }
 
+        //配置
+        virtual HNW_BASE_ERR_CODE config(HNW_HANDLE handle, 
+            int config_type, void* data, size_t data_len)
+        {
+            //全局的
+            if (handle == INVAILD_HANDLE)
+            {
+                return config(config_type, data, data_len);
+            }
+
+            //通道函数
+            auto ch = get_channel(handle);
+            if (nullptr == ch)
+            {
+                PRINTFLOG(BL_ERROR, "ch[%lld] is no exist!", handle);
+                return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
+            }
+
+            return ch->config(config_type, data, data_len);
+        }
+
+        //全局配置
+        virtual HNW_BASE_ERR_CODE config(int config_type, void* data, size_t data_len)
+        {
+            PRINTFLOG(BL_DEBUG, "this channel no support :config");
+            return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
+
+
         //发送数据
         virtual HNW_BASE_ERR_CODE send(HNW_HANDLE handle, \
             std::shared_ptr<char> message, size_t message_size)
