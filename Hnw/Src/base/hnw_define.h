@@ -18,6 +18,12 @@
 
 #define USE_BOOST_ASIO
 
+//配置项
+//设置SSL 服务器证书路径 输入 char[128]
+#define  SET_SSL_SERVER_CERT_FILE_PATH 1
+//私有密钥 private_key输入 char[128]
+#define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 2
+
 //错误码
 enum class HNW_BASE_ERR_CODE
 {
@@ -116,37 +122,37 @@ enum class HNW_BASE_ERR_CODE
     //SSL 服务端端 握手失败
     HNW_BASE_SSL_SERVER_HANDSHAKE_FAIL,
 
-    ////http 解析失败
-    //HNW_HTTP_PARSER_FAIL,
+    //http 解析失败
+    HNW_HTTP_PARSER_FAIL,
 
-    ////空的解析器
-    //HNW_HTTP_EMPTY_PARSER,
+    //空的解析器
+    HNW_HTTP_EMPTY_PARSER,
 
-    ////http 主机是无效的
-    //HNW_HTTP_HOST_IS_IVAILD,
+    //http 主机是无效的
+    HNW_HTTP_HOST_IS_IVAILD,
 
-    ////http 错误的报文
-    //HNW_HTTP_BAD_MESSAGE,
+    //http 错误的报文
+    HNW_HTTP_BAD_MESSAGE,
 
-    ////http 键值重复
-    //HNW_HTTP_PARSER_KEY_IS_NO_EMPTY,
+    //http 键值重复
+    HNW_HTTP_PARSER_KEY_IS_NO_EMPTY,
 
-    ////http 错误的行头
-    //HNW_HTTP_PARSER_BAD_START_LINE,
+    //http 错误的行头
+    HNW_HTTP_PARSER_BAD_START_LINE,
 
-    ////http 错误的head
-    //HNW_HTTP_PARSER_BAD_HEAD_KEY,
-    ////http 键值空
-    //HNW_HTTP_PARSER_KEY_IS_EMPTY,
+    //http 错误的head
+    HNW_HTTP_PARSER_BAD_HEAD_KEY,
+    //http 键值空
+    HNW_HTTP_PARSER_KEY_IS_EMPTY,
 
-    ////http 解析回调为空
-    //HNW_HTTP_PARSER_CB_IS_EMPTY,
-    //
-    ////http 解析回调不可以是默认的
-    //HNW_HTTP_PARSER_CB_IS_DEFAULT,
+    //http 解析回调为空
+    HNW_HTTP_PARSER_CB_IS_EMPTY,
+    
+    //http 解析回调不可以是默认的
+    HNW_HTTP_PARSER_CB_IS_DEFAULT,
 
-    ////http 报文组装失败
-    //HNW_HTTP_STRUCT_MESSAGE_FAIL,
+    //http 报文组装失败
+    HNW_HTTP_STRUCT_MESSAGE_FAIL,
 
     //未知错误
     HNW_BASE_NUKNOW_ERROR = -9999,
@@ -171,13 +177,6 @@ enum class HNW_CHANNEL_TYPE
     SSL_CLIENT,
     //SSL 服务端
     SSL_SERVER,
-
-
-    ////http 客户端
-    //HTTP_CLIENT,
-
-    ////http 服务端
-    //HTTP_SERVER
 };
 
 //节点

@@ -25,6 +25,12 @@ target_link_libraries(HnwHttpClient  HnwHttp)
 add_executable(HnwHttpServer "httpserver/main.cpp")
 target_link_libraries(HnwHttpServer  HnwHttp)
 
+include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
+include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/OpenSSL.cmake)
+
+add_executable(SSL_Test "SSLTest/main.cpp")
+target_link_libraries(SSL_Test  OpenSSL::SSL OpenSSL::Crypto)
+
 install(TARGETS HnwTcpClient HnwTcpServer HnwUdp HnwDns
 	RUNTIME DESTINATION Hnw/Example
 )

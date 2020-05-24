@@ -167,6 +167,24 @@ namespace hnw
                 return socket_.lowest_layer().is_open();
             }
 
+            bool before_accept()
+            {
+                //同步，为了统一借口
+                boost::system::error_code ec;
+                socket_.handshake(boost::asio::ssl::stream_base::handshake_type::server, ec);
+
+                if (ec)
+                {
+                    //减少打印
+                    PRINTFLOG(BL_DEBUG, "handshake error what()=%s", ec.message().c_str());
+                    //上层关闭
+                    EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_SSL_SERVER_HANDSHAKE_FAIL, "ssl server hand shake fail");
+                    //close();
+                    return false;
+                }
+                bconn_ = true;
+                return true;
+            }
             bool after_accept()
             {
                 //auto self = shared_from_this();
@@ -190,20 +208,6 @@ namespace hnw
                 ////ssl 握手
                 ////socket_.async_handshake(boost::asio::ssl::stream_base::handshake_type::server, handshake_handle);
 
-                //同步，为了统一借口
-                boost::system::error_code ec;
-                socket_.handshake(boost::asio::ssl::stream_base::handshake_type::server, ec);
-
-                if (ec)
-                {
-                    //减少打印
-                    PRINTFLOG(BL_DEBUG, "handshake error what()=%s", ec.message().c_str());
-                    //上层关闭
-                    EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_SSL_SERVER_HANDSHAKE_FAIL, "ssl server hand shake fail");
-                    //close();
-                    return false;
-                }
-                bconn_ = true;
                 async_recv();
                 return true;
             }

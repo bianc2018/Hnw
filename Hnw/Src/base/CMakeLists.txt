@@ -7,7 +7,8 @@ cmake_minimum_required (VERSION 3.8)
 include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/OpenSSL.cmake)
 
-add_library(HnwBase SHARED  "hnw_base.cpp" "hnw_base.h")
+#add_library(HnwBase SHARED  "hnw_base.cpp" "hnw_base.h")
+add_library(HnwBase   "hnw_base.cpp" "hnw_base.h")
 
 SET_TARGET_PROPERTIES(HnwBase PROPERTIES VERSION ${HNW_VERSION})
 

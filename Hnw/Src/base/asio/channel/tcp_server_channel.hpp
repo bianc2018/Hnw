@@ -193,13 +193,15 @@ namespace hnw
                         if (cli->is_open())
                         {
                             //协议栈异步处理连接
-                            cli->after_accept();
+                            cli->before_accept();
                             PRINTFLOG(BL_DEBUG, "%I64d accept a clent[%I64d] "\
                                 , handle_, cli->get_handle());
 
                             accept_cb_(cli);
 
                             EVENT_ACCEPT_CB(cli->get_handle());
+
+                            cli->after_accept();
                         }
                         else
                         {

@@ -126,11 +126,15 @@ namespace hnw
                 //套接字已打开
                 return socket_.is_open();
             }
-
-            bool after_accept()
+            bool before_accept()
             {
                 //链接已建立
                 bconn_ = true;
+                return true;
+            }
+            bool after_accept()
+            {
+               
                 //bconn_ = true;
                 //EVENT_OK_CB(BNS_NET_EVENT_TYPE::BNS_CONNECT_ESTABLISH);
                 //接收数据

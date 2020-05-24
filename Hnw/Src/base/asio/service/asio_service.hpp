@@ -152,7 +152,7 @@ namespace hnw
                     ch = std::make_shared<ASIOSSLServerChannel>(service_, \
                         std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
                     if (ch)
-                        PRINTFLOG(BL_DEBUG, "new a TcpServerChannel handle[%I64d]", ch->get_handle());
+                        PRINTFLOG(BL_DEBUG, "new a SSLServerChannel handle[%I64d]", ch->get_handle());
                 }
 #endif
                /* else if (HNW_CHANNEL_TYPE::HTTP_CLIENT == type)

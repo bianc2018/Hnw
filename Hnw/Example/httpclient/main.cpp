@@ -22,9 +22,9 @@ void event_cb(std::int64_t handle, \
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA == type)
     {
-        auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+        /*auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
         printf("handle:%lld is recv data :%s \n", handle, std::string(data->buff
-            , data->buff_len).c_str());
+            , data->buff_len).c_str());*/
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
     {
@@ -54,15 +54,20 @@ int main(int argc, char* argv[])
 {
     //HnwBase_Init();
 
+    HttpParam param;
+    param.host = "https://www.baidu.com/";
+    param.peer_type = Client;
+    param.cert_file = "D:\\code\\Hnw\\out\\build\\x64-Debug\\Bin\\Debug\\server-cert.pem";
+    param.pri_key_file = "D:\\code\\Hnw\\out\\build\\x64-Debug\\Bin\\Debug\\server-key.pem";
     //初始化通道
-    auto ret = HnwHttp_StartSession("www.baidu.com", event_cb, handle);
+    auto ret = HnwHttp_Start(param, event_cb, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {
-        printf("HnwHttp_StartSession ok,handle=%lld\n", handle);
+        printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
     }
     else
     {
-        printf("HnwHttp_StartSession fail,ret =%d \n", ret);
+        printf("HnwHttp_StartServer fail,ret =%d \n", ret);
         return (int)ret;
     }
 

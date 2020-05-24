@@ -12,9 +12,9 @@ add_library(HnwParser SHARED  "hnw_http.h" "hnw_http.cpp" )
 
 SET_TARGET_PROPERTIES(HnwParser PROPERTIES VERSION ${HNW_VERSION})
 
-target_link_libraries(HnwParser  HnwBase ${DEFAULT_LIB} )
+target_link_libraries(HnwParser  ${DEFAULT_LIB} )
 
-install(TARGETS HnwHttp 
+install(TARGETS HnwParser 
 	LIBRARY DESTINATION Hnw/lib
 	ARCHIVE DESTINATION Hnw/lib
 )

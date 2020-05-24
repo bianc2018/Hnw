@@ -28,5 +28,6 @@ endif()
 # 包含子项目。
 #add_subdirectory ("./Hnw")
 add_subdirectory ("./Hnw/Src/base")
+add_subdirectory ("./Hnw/Src/http")
 add_subdirectory ("./Hnw/Example")
 

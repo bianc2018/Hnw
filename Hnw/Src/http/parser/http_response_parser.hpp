@@ -4,8 +4,8 @@
 */
 #ifndef HNW_HTTP_RESPONSE_PARSER_HPP_
 #define HNW_HTTP_RESPONSE_PARSER_HPP_
-#include "../../../hnw_http.h"
-#include "../../../define/parser.hpp"
+#include "../hnw_http.h"
+#include "http_parser_define.hpp"
 namespace hnw
 {
 	namespace parser
@@ -134,6 +134,13 @@ namespace hnw
 					if (msg->head.end() == p)
 					{
 						msg->head.insert(std::make_pair(HTTP_LEN, std::to_string(msg->body.size())));
+					}
+
+					//ĞÂÔöbody_len
+					p = msg->head.find(HTTP_CONN);
+					if (msg->head.end() == p)
+					{
+						msg->head.insert(std::make_pair(HTTP_CONN, "Close"));
 					}
 
 					for (auto h : msg->head)

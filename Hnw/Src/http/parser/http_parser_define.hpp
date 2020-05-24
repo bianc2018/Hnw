@@ -4,7 +4,7 @@
 */
 #ifndef HNW_HTTP_PARSER_DEFINE_HPP_
 #define HNW_HTTP_PARSER_DEFINE_HPP_
-#include "../../../define/define.hpp"
+#include "define/parser.hpp"
 namespace hnw
 {
 	namespace parser
@@ -89,6 +89,58 @@ namespace hnw
 		static std::string http_reasion(const std::string& status, const std::string& defualt_r = "NONE")
 		{
 			return defualt_r;
+		}
+
+		//½âÎöurl
+		struct UrlParam
+		{
+			std::string protocol;
+			std::string host;
+			std::string port;
+			std::string path;
+			std::string query_string;
+
+		};
+		static bool parser_url(const std::string& url, UrlParam& out)
+		{
+			// http://www.baidu.com:8080/in?q=q&
+			size_t pos = 0;
+			auto p = url.find("://", pos);
+			if (p != std::string::npos)
+			{
+				out.protocol = url.substr(0, p);
+				pos = p+3;
+			}
+
+			p = url.find("/", pos);
+			if (p != std::string::npos)
+			{
+				auto str = url.substr(pos, p-pos);
+				auto v = split(str, ":");
+				out.host = v[0];
+				if (v.size() >= 2)
+				{
+					out.port = v[1];
+				}
+				pos = p+1;
+			}
+			else
+			{
+				out.host = url.substr(pos);
+				return true;
+			}
+			p = url.find("?", pos);
+			if (p != std::string::npos)
+			{
+				out.path = url.substr(pos, p - pos);
+				pos = p + 1;
+				out.query_string = url.substr(pos);
+			}
+			else
+			{
+				out.path = url.substr(pos);
+			}
+			return true;
 		}
 	}
 }

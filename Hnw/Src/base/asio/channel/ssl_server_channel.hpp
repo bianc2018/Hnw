@@ -8,15 +8,26 @@
 
 namespace hnw
 {
+    std::string get_password(std::size_t size,
+        boost::asio::ssl::context_base::password_purpose purpose)
+    {
+        return "test";
+    }
+
     namespace boost_asio
     {
         class ASIOSSLServerChannel:public ASIOTcpServerChannel
         {
         public:
-            ASIOSSLServerChannel(io_service& service, ACCEPT_CHANNEL_FN cb,ssl_method m = ssl_method::sslv23)
+            ASIOSSLServerChannel(io_service& service, ACCEPT_CHANNEL_FN cb,ssl_method m = ssl_method::sslv23_server)
                 :ASIOTcpServerChannel(service,cb),ctx_(m)
             {
+                ctx_.set_options(
+                    boost::asio::ssl::context::default_workarounds
+                    | boost::asio::ssl::context::no_sslv2| boost::asio::ssl::context::single_dh_use);
+                ctx_.set_verify_mode(boost::asio::ssl::verify_none);
 
+                ctx_.set_password_callback(get_password);
             }
             virtual ~ASIOSSLServerChannel()
             {
@@ -31,6 +42,7 @@ namespace hnw
                 cli->init(NET_INVALID_POINT);
                 cli->set_shared_cb(make_shared_);
                 cli->set_log_cb(log_cb_);
+
                 cli->set_event_cb(event_cb_);
                 return cli;
             }
@@ -67,13 +79,15 @@ namespace hnw
                         if (cli->is_open())
                         {
                             //协议栈异步处理连接
-                            cli->after_accept();
+                            cli->before_accept();
                             PRINTFLOG(BL_DEBUG, "%I64d accept a clent[%I64d] "\
                                 , handle_, cli->get_handle());
 
                             accept_cb_(cli);
 
                             EVENT_ACCEPT_CB(cli->get_handle());
+
+                            cli->after_accept();
                         }
                         else
                         {
@@ -91,6 +105,35 @@ namespace hnw
 
                 });
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
+
+            //配置
+            virtual HNW_BASE_ERR_CODE config(int config_type, void* data, size_t data_len)
+            {
+                if (SET_SSL_SERVER_CERT_FILE_PATH == config_type)
+                {
+                    char* pth = (char*)data;
+                    PRINTFLOG(BL_DEBUG, "server cert file path is setd %s", pth);
+                   // ctx_.use_certificate_chain_file(pth);
+                    ctx_.use_certificate_file(pth, boost::asio::ssl::context::file_format::pem);
+                   // ctx_.load_verify_file(pth/*, boost::asio::ssl::context::file_format::pem*/);
+                   // ctx_.use_private_key_file(pth, boost::asio::ssl::context::file_format::pem);
+ 
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
+                //SET_SSL_SERVER_PRI_KEY_FILE_PATH
+                else if (SET_SSL_SERVER_PRI_KEY_FILE_PATH == config_type)
+                {
+                    char* pth = (char*)data;
+                    PRINTFLOG(BL_DEBUG, "server private_key file path is setd %s", pth);
+                    // ctx_.use_certificate_chain_file(pth);
+                   // ctx_.use_certificate_file(pth, boost::asio::ssl::context::file_format::pem);
+                    ctx_.use_private_key_file(pth, boost::asio::ssl::context::file_format::pem);
+
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
+                else
+                    return ASIOTcpServerChannel::config(config_type,data,data_len);
             }
         protected:
             ssl_ctx ctx_;

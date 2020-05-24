@@ -4,8 +4,7 @@
 */
 #ifndef HNW_HTTP_REQUEST_PARSER_HPP_
 #define HNW_HTTP_REQUEST_PARSER_HPP_
-#include "../../../hnw_http.h"
-#include "../../../define/parser.hpp"
+#include "../hnw_http.h"
 #include "http_parser_define.hpp"
 namespace hnw
 {
@@ -32,6 +31,7 @@ namespace hnw
 		private:
 			HNW_BASE_ERR_CODE on_start_line(const unsigned char ch)
 			{
+				PRINTFLOG(BL_DEBUG, "%c", ch);
 				if (CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
@@ -63,6 +63,7 @@ namespace hnw
 			}
 			HNW_BASE_ERR_CODE on_head(const unsigned char ch)
 			{
+				PRINTFLOG(BL_DEBUG, "%c", ch);
 				if (CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
@@ -113,7 +114,7 @@ namespace hnw
 			}
 			HNW_BASE_ERR_CODE on_body(const unsigned char ch)
 			{
-				
+				PRINTFLOG(BL_DEBUG, "%c", ch);
 				tmp_->body += ch;
 				if (tmp_->body.size() >= body_len_)
 					return push();
@@ -129,22 +130,31 @@ namespace hnw
 
 			   if (msg)
 			   {
-				   std::string str = msg->method + SPACE + msg->url + SPACE + msg->version + CRLF;
-				   for (auto h : msg->head)
-				   {
-					   str += h.first + HEAD_SPLIT + h.second + CRLF;
-				   }
-
 				   //新增body_len
 				   auto p = msg->head.find(HTTP_LEN);
 				   if (msg->head.end() == p)
 				   {
 					   msg->head.insert(std::make_pair(HTTP_LEN, std::to_string(msg->body.size())));
 				   }
+
+				   //新增body_len
+				   p = msg->head.find(HTTP_CONN);
+				   if (msg->head.end() == p)
+				   {
+					   msg->head.insert(std::make_pair(HTTP_CONN, "Close"));
+				   }
+
+				   std::string str = msg->method + SPACE + msg->url + SPACE + msg->version + CRLF;
+
+				   for (auto h : msg->head)
+				   {
+					   str += h.first + HEAD_SPLIT + h.second + CRLF;
+				   }
+
 				   str += CRLF;
 				   str += msg->body;
 
-				   printf("http response:\n%s\n", str.c_str());
+				//   printf("http response:\n%s\n", str.c_str());
 
 				   return str;
 			   }
@@ -175,10 +185,7 @@ namespace hnw
 		private:
 			//解析缓存
 			std::string parser_cache1_;
-			//std::string parser_cache2_;
-
 			size_t body_len_;
-			//std::shared_ptr<HnwHttpResponse> tmp_;
             std::shared_ptr<HnwHttpRequest> tmp_;
         };
 
