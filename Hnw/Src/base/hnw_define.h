@@ -23,6 +23,14 @@
 #define  SET_SSL_SERVER_CERT_FILE_PATH 1
 //私有密钥 private_key输入 char[128]
 #define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 2
+//交换密钥
+#define SET_SSL_SERVER_TEMP_DH_FILE_PATH 3
+
+//设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
+#define SET_RECV_BUFF_SIZE 4
+
+//设置 接受链接的线程数 输入 size_t server类型的通道有效而且不可在accept之后设置，不指定通道则之后创建的通道使用这个大小
+#define SET_SERVER_ACCEPT_NUM 5
 
 //错误码
 enum class HNW_BASE_ERR_CODE
@@ -286,4 +294,18 @@ enum BLOG_LEVEL
     BL_WRAN,
     BL_ERROR,
 };
+
+template<typename Ty, typename ...Args>
+static std::shared_ptr<Ty> make_shared_safe(Args&&...args)
+{
+    try
+    {
+        return std::make_shared<Ty>(std::forward<Args>(args)...);
+    }
+    catch (const std::exception& e)
+    {
+        printf("default_make_shared exception what=%s\n", e.what());
+        return nullptr;
+    }
+}
 #endif

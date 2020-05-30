@@ -29,8 +29,11 @@ namespace hnw
             }
 
 		private:
-			HNW_BASE_ERR_CODE on_start_line(const unsigned char ch)
+			HNW_BASE_ERR_CODE on_start_line( unsigned char** start,
+				 unsigned char* const end)
 			{
+				auto ch = *(*start);
+				(*start)++;
 				PRINTFLOG(BL_DEBUG, "%c", ch);
 				if (CR == ch)
 				{
@@ -61,8 +64,12 @@ namespace hnw
 				}
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}
-			HNW_BASE_ERR_CODE on_head(const unsigned char ch)
+			HNW_BASE_ERR_CODE on_head( unsigned char** start,
+				 unsigned char* const end)
 			{
+				auto ch = *(*start);
+				(*start)++;
+
 				PRINTFLOG(BL_DEBUG, "%c", ch);
 				if (CR == ch)
 				{
@@ -83,6 +90,8 @@ namespace hnw
 						{
 							//ÄÃµ½´óÐ¡
 							body_len_ = std::stoul(p->second);
+							if(body_len_ == 0)
+								return push();
 							parser_status_ = BODY;
 						}
 						//return HNW_BASE_ERR_CODE::HNW_BASE_OK;
@@ -112,13 +121,31 @@ namespace hnw
 				}
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}
-			HNW_BASE_ERR_CODE on_body(const unsigned char ch)
+			HNW_BASE_ERR_CODE on_body( unsigned char** start,
+				 unsigned char* const end)
 			{
-				PRINTFLOG(BL_DEBUG, "%c", ch);
-				tmp_->body += ch;
-				if (tmp_->body.size() >= body_len_)
+				auto data_len = end - (*start);
+				if (data_len < 0)
+				{
+					PRINTFLOG(BL_ERROR, "end>start");
+					return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+				}
+				if (data_len >= body_len_)
+				{
+					//
+					tmp_->body.append((char*)(*start), body_len_);
+					*start = *start+ body_len_;
+					body_len_ = 0;
 					return push();
-				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+				}
+				else
+				{
+					tmp_->body.append((char*)(*start), data_len);
+					*start = end;
+					body_len_ -= data_len;
+					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+				}
+				
 			}
          
 	   public:

@@ -72,12 +72,19 @@ public:
     }
 };
 
+//日志回调
+typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_HTTP_LOG_CB;
+//设置日志回调
+HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_SetLogCB(HNW_HTTP_LOG_CB cb);
+
 //端点类型
 enum PeerType
 {
     Server,
-    Client
+    Client,
+    None
 };
+
 //启动参数
 struct HttpParam
 {
@@ -85,14 +92,20 @@ struct HttpParam
     std::string host;
 
     //类型
-    PeerType peer_type;
+    PeerType peer_type= PeerType::None;
 
     //ssl
     //证书地址
     std::string cert_file;
     //私钥文件地址
     std::string pri_key_file;
+    //交换文件地址
+    std::string temp_dh_file;
+
+    //接收线程
+    size_t accept_num = 0;
 };
+
 
 //启动服务器
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Start(
@@ -120,13 +133,16 @@ HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Start(
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Request(
     HNW_HANDLE handle,std::shared_ptr<HnwHttpRequest> req);
 
-
 //回复
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Response(
     HNW_HANDLE handle, std::shared_ptr<HnwHttpResponse> req);
 
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Close(HNW_HANDLE handle);
 
+//配置项
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Config(HNW_HANDLE handle, int config_type, void* data, size_t data_len);
+
+//创建空的请求 ,失败返回 NULL
 
 #endif // !BNS_H_
 

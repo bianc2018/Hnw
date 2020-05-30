@@ -1,9 +1,9 @@
 ﻿{
   "configurations": [
     {
-      "name": "x64-Debug",
+      "name": "x64",
       "generator": "Visual Studio 16 2019",
-      "configurationType": "Debug",
+      "configurationType": "Release",
       "inheritEnvironments": [ "msvc_x86_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
@@ -14,7 +14,7 @@
       "variables": []
     },
     {
-      "name": "Linux-GCC-Debug",
+      "name": "Linux-GCC",
       "generator": "Unix Makefiles",
       "configurationType": "Debug",
       "cmakeExecutable": "/usr/bin/cmake",

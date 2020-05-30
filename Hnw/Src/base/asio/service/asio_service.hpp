@@ -123,34 +123,36 @@ namespace hnw
                 std::shared_ptr<Channel>ch = nullptr;
                 if (HNW_CHANNEL_TYPE::TCP_CLIENT == type)
                 {
-                    ch = std::make_shared<ASIOTcpClientChannel>(service_);
+                    ch = make_shared_safe<ASIOTcpClientChannel>(service_);
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a TcpClientChannel handle[%I64d]", ch->get_handle());
                 }
                 else if (HNW_CHANNEL_TYPE::TCP_SERVER == type)
                 {
-                    ch = std::make_shared<ASIOTcpServerChannel>(service_, \
+                    ch = make_shared_safe<ASIOTcpServerChannel>(service_, \
                         std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
+                   // PTR_CAST(ASIOTcpServerChannel, ch)->set_accept_num(10);
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a TcpServerChannel handle[%I64d]", ch->get_handle());
                 }
                 else if (HNW_CHANNEL_TYPE::UDP == type)
                 {
-                    ch = std::make_shared<ASIOUdpChannel>(service_);
+                    ch = make_shared_safe<ASIOUdpChannel>(service_);
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a UdpChannel handle[%I64d]", ch->get_handle());
                 }
 #ifdef _USE_OPENSSL
                 else if (HNW_CHANNEL_TYPE::SSL_CLIENT == type)
                 {
-                    ch = std::make_shared<ASIOSSLClientChannel>(service_);
+                    ch = make_shared_safe<ASIOSSLClientChannel>(service_);
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a SSLClientChannel handle[%I64d]", ch->get_handle());
                 }
                 else if (HNW_CHANNEL_TYPE::SSL_SERVER == type)
                 {
-                    ch = std::make_shared<ASIOSSLServerChannel>(service_, \
+                    ch = make_shared_safe<ASIOSSLServerChannel>(service_, \
                         std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
+                  //  PTR_CAST(ASIOSSLServerChannel, ch)->set_accept_num(10);
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a SSLServerChannel handle[%I64d]", ch->get_handle());
                 }
@@ -185,7 +187,8 @@ namespace hnw
                 ch->set_log_cb(std::bind(&AsioService::printf_log, \
                     this, std::placeholders::_1, std::placeholders::_2));
                 ch->set_shared_cb(std::bind(&AsioService::get_cache, this, std::placeholders::_1));
-
+                ch->config(SET_RECV_BUFF_SIZE, (void*)&recv_buff_size_, sizeof(recv_buff_size_));
+                ch->config(SET_SERVER_ACCEPT_NUM, (void*)&accept_num_, sizeof(accept_num_));
                 auto err = ch->init(local);
 
                 if (HNW_BASE_ERR_CODE::HNW_BASE_OK != err)
@@ -223,7 +226,7 @@ namespace hnw
                 }
                 catch (std::exception& e)
                 {
-                    PRINTFLOG(BL_ERROR, "Dns query fail what =%s", e.what());
+                    PRINTFLOG(BL_ERROR, "Dns query fail what =%s,input %s", e.what(), host.c_str());
                     return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
                 }
                 

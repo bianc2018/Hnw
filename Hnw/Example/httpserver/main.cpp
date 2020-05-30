@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <string>
+#include <time.h>
+
 
 void event_cb(std::int64_t handle, \
     int t,
@@ -33,9 +35,13 @@ void event_cb(std::int64_t handle, \
         printf("handle:%lld is recv a request %p\n", handle, event_data.get());
 
         auto request = PTR_CAST(HnwHttpRequest, event_data);
-        printf("recv request %s\n:%s\n", request->url.c_str(), request->body.c_str());
+        //printf("recv request %s\n:%d\n", request->url.c_str(), request->body.size());
         auto response = std::make_shared<HnwHttpResponse>();
-        response->body ="\r\n--beg req--\r\n"+request->body+"\r\n--end req--\r\n";
+        //response->body ="\r\n--beg req--\r\n"+request->body+"\r\n--end req--\r\n";
+        //if()
+        response->body = std::string(1024 * 1024,'d');
+        //int i = 100;
+       // while(true)
         HnwHttp_Response(handle, response);
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR == type)
@@ -55,11 +61,17 @@ int main(int argc, char* argv[])
         context_.use_private_key_file("D:\\lib\\cert\\server-key.pem", boost::asio::ssl::context::pem);
         context_.use_tmp_dh_file("D:\\lib\\cert\\dh1024.pem");
     */
+    std::cout << "input host:";
+    
     HttpParam param;
-    param.host = "https://127.0.0.1:8081/";
+    param.host = "http://127.0.0.1:8081/";
     param.peer_type = Server;
     param.cert_file = "D:\\lib\\cert\\server-cert.pem";
     param.pri_key_file = "D:\\lib\\cert\\server-key.pem";
+    param.temp_dh_file = "D:\\lib\\cert\\dh1024.pem";
+    param.accept_num = 10;
+    std::cin >> param.host;
+
     //初始化通道
     auto ret = HnwHttp_Start(param, event_cb, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
@@ -71,7 +83,7 @@ int main(int argc, char* argv[])
         printf("HnwHttp_StartServer fail,ret =%d \n", ret);
         return (int)ret;
     }
-
+    
     system("pause");
 
     HnwHttp_Close(handle);

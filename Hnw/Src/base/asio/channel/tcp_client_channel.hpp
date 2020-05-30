@@ -203,7 +203,7 @@ namespace hnw
                     return HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN;
                 }
 
-                if (nullptr == buff)
+                if (nullptr == buff||buff_len!=recv_buff_size_)
                 {
                     buff_len = recv_buff_size_;
                     buff = MAKE_SHARED(recv_buff_size_);

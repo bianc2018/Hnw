@@ -67,13 +67,26 @@ EVENT_CB(opt,nullptr)
 namespace hnw
 {
     //接收缓存 1M
-    const size_t default_recv_buff_size = 1024 * 1024*10;
+    const size_t default_recv_buff_size = 1024 * 1024;
+
+    //接收缓存 1M
+    const size_t default_accept_num = 5;
 
     //默认的函数
     static std::shared_ptr<char> default_make_shared(size_t memory_size)
     {
-        return std::shared_ptr<char>(new char[memory_size], std::default_delete<char[]>());
+        try
+        {
+            return std::shared_ptr<char>(new char[memory_size], std::default_delete<char[]>());
+        }
+        catch (const std::exception&e)
+        {
+            printf("default_make_shared exception what=%s\n", e.what());
+            return nullptr;
+        }
+        
     }
+    
 
     //默认日志打印
     static std::string g_log_tag[4] = { "DEBUG","INFO","WRAN","ERROR" };

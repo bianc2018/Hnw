@@ -87,6 +87,25 @@ namespace hnw
         //≈‰÷√
         virtual HNW_BASE_ERR_CODE config(int config_type,void *data,size_t data_len)
         {
+            if (SET_RECV_BUFF_SIZE == config_type)
+            {
+                if (data)
+                {
+                    auto p = (size_t*)data;
+                    if (*p == 0)
+                    {
+                        PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE recv_buff_size_ must be !=0");
+                        return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                    }
+                    recv_buff_size_ = *p;
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE config error data must be size_t*");
+                    return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                }
+            }
             PRINTFLOG(BL_DEBUG, "this channel no support :config");
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }

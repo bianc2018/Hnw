@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     //初始化通道
     NetPoint local;
-    local.ip = "0.0.0.0";
+    local.ip = "fe80::9040:84d6:bd13:2b96%7";
     local.port = 8081;
     auto ret = HnwBase_Add_Channnel(HNW_CHANNEL_TYPE::TCP_SERVER, local, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)

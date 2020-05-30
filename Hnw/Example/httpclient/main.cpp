@@ -1,24 +1,39 @@
 #include "hnw_http.h"
 
+#include <time.h>
+
 #include <iostream>
 #include <string>
+#include <thread>
+#include <atomic>
+static std::string path = "/";
 
+static clock_t time_ms = ::clock();
+static std::atomic_int64_t req_num = 0;
+static std::atomic_int64_t con_num = 0;
+static std::vector<HNW_HANDLE> handles;
+static HttpParam param;
 void event_cb(std::int64_t handle, \
     int t,
     std::shared_ptr<void> event_data)
 {
     HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)t;
-    printf("Event CB handle-%lld,type-%d buff-%p\n",
-        handle, type, event_data.get());
+   /* printf("Event CB handle-%lld,type-%d buff-%p\n",
+        handle, type, event_data.get());*/
 
     if (HNW_BASE_EVENT_TYPE::HNW_BASE_CONNECT_ESTABLISH == type)
     {
-        printf("handle:%lld is connnect \n", handle);
+       /* printf("handle:%lld is connnect \n", handle);*/
 
         auto request = std::make_shared<HnwHttpRequest>();
-        request->url = "/";
+        request->head.insert(std::make_pair("Connection", "Close"));
+        request->url = path;
+       // request->body = std::string(1024*1024*20 , 'c');
+        req_num = 0;
+        time_ms = clock();
         auto ret = HnwHttp_Request(handle, request);
-        printf("send a request %d\n", ret);
+        con_num++;
+        /*printf("send a request %d\n", ret);*/
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA == type)
     {
@@ -28,53 +43,103 @@ void event_cb(std::int64_t handle, \
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
     {
-        printf("handle:%lld is send data complete\n", handle);
+       /* printf("handle:%lld is send data complete\n", handle);*/
+       /* auto request = std::make_shared<HnwHttpRequest>();
+        request->url = path;
+        request->head.insert(std::make_pair("Connection", "Keep-Alive"));
+        request->body = std::string(1024 * 1024 * 10, 'data');
+        auto ret = HnwHttp_Request(handle, request);*/
+      
+       /* printf("send a request %d\n", ret);*/
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED == type)
     {
-        printf("handle:%lld is close\n", handle);
+        /*printf("handle:%lld is close\n", handle);*/
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE == type)
     {
-        printf("handle:%lld is recv a response %p\n", handle, event_data.get());
+       /* printf("handle:%lld is recv a response %p\n", handle, event_data.get());*/
 
         auto response = PTR_CAST(HnwHttpResponse, event_data);
-        printf("%s:%s\n", response->status_code.c_str(), response->body.c_str());
+        //printf("%s:%s\n", response->status_code.c_str(), response->body.c_str());
+
+        //++req_num;
+        req_num += response->body.size();
+        auto data = req_num.load();
+        auto t = (clock() - time_ms);
+        printf("[%lld]commit all %lld byte,usd %d ms %f KB/s\n", con_num.load(),
+            data, t, data / float(t));
+        HnwHttp_Close(handle);
+        //HnwHttp_Start(param, event_cb, handle);
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR == type)
     {
         auto error = PTR_CAST(HnwBaseErrorEvent, event_data);
+        //HnwHttp_Start(param, event_cb, handle);
         printf("handle:%lld is has error(%d,%s)\n", handle, (int)error->code, error->message.c_str());
     }
 
 }
 
-HNW_HANDLE handle = -1;
+
+std::atomic_bool flag = false;
+void check_time()
+{
+    while (flag)
+    {
+        auto data = req_num.load();
+        auto t = (clock() - time_ms);
+        printf("commit all %d byte,usd %d ms %f KB/s\n", data, t, data/float(t));
+
+        //清零
+        //req_num = 0;
+        //time_ms = clock();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+}
+
 int main(int argc, char* argv[])
 {
-    //HnwBase_Init();
+    //HnwHttp_SetLogCB(NULL);
 
-    HttpParam param;
-    param.host = "https://www.baidu.com/";
+    std::cout << "input thread num:";
+    size_t thread_num = 10000;
+   // std::cin >> thread_num;
+
+    std::cout << "input home:";
+    
+    param.host = "www.baidu.com";
     param.peer_type = Client;
-    param.cert_file = "D:\\code\\Hnw\\out\\build\\x64-Debug\\Bin\\Debug\\server-cert.pem";
-    param.pri_key_file = "D:\\code\\Hnw\\out\\build\\x64-Debug\\Bin\\Debug\\server-key.pem";
-    //初始化通道
-    auto ret = HnwHttp_Start(param, event_cb, handle);
-    if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
-    {
-        printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
-    }
-    else
-    {
-        printf("HnwHttp_StartServer fail,ret =%d \n", ret);
-        return (int)ret;
-    }
+    //std::cin >> param.host;
 
-   
+    std::cout << "input path:";
+    //std::cin >> path;
+
+    
+    while (handles.size()<thread_num)
+    {
+        //初始化通道
+        HNW_HANDLE handle = -1;
+        auto ret = HnwHttp_Start(param, event_cb, handle);
+        if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
+        {
+            printf("HnwHttp_StartServer ok,handle=%lld\n", handle);
+            handles.push_back(handle);
+        }
+        else
+        {
+            printf("HnwHttp_StartServer fail,ret =%d \n", ret);
+            return (int)ret;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+    std::thread th(check_time);
     system("pause");
-
-    HnwHttp_Close(handle);
+    flag = false;
+    if (th.joinable())
+        th.join();
+    for(auto &h:handles)
+        HnwHttp_Close(h);
 
     //HnwBase_DInit();
     return 0;

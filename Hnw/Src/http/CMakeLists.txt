@@ -7,8 +7,8 @@ include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 
 include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src/base)
 
-#add_library(HnwHttp SHARED  "hnw_http.h" "hnw_http.cpp" )
-add_library(HnwHttp "hnw_http.h" "hnw_http.cpp" )
+add_library(HnwHttp SHARED  "hnw_http.h" "hnw_http.cpp" )
+#add_library(HnwHttp "hnw_http.h" "hnw_http.cpp" )
 
 SET_TARGET_PROPERTIES(HnwHttp PROPERTIES VERSION ${HNW_VERSION})
 

@@ -16,17 +16,20 @@
 #include "../hnw_define.h"
 
 //注册类成员函数
-#define REG_CFUNC(s,cb) reg_parser_cb(s,std::bind(&cb, this, std::placeholders::_1))
+#define REG_CFUNC(s,cb) reg_parser_cb(s,std::bind(&cb, this,\
+std::placeholders::_1, std::placeholders::_2))
 
 //注册普通函数
-#define REG_FUNC(s,cb) reg_parser_cb(s,std::bind(cb, std::placeholders::_1))
+#define REG_FUNC(s,cb) reg_parser_cb(s,std::bind(cb,\
+ std::placeholders::_1, std::placeholders::_2))
 
 namespace hnw
 {
 	namespace parser
 	{
 		//解析回调
-		typedef std::function<HNW_BASE_ERR_CODE(const  unsigned char ch)> PARSER_CB;
+		typedef std::function<HNW_BASE_ERR_CODE(unsigned char **start,
+			 unsigned char* const end)> PARSER_CB;
 
 		//解析器基类
 		class ParserBase 
@@ -34,8 +37,9 @@ namespace hnw
 		public:
 			ParserBase(HNW_HANDLE handle):handle_(handle)
 			{
-				reg_parser_default_cb([this](const unsigned char ch) {
-					return default_parser(ch);
+				reg_parser_default_cb([this](unsigned char** start,
+					 unsigned char* const end) mutable{
+					return default_parser(start,end);
 				});
 			}
 			virtual ~ParserBase()
@@ -47,19 +51,21 @@ namespace hnw
 				输入的数据
 				返回，0无错误 其他自定义
 			*/
-			virtual HNW_BASE_ERR_CODE input_data(const unsigned char* data,
+			virtual HNW_BASE_ERR_CODE input_data(unsigned char* data,
 				size_t data_len)
 			{
-				for (size_t i = 0; i < data_len; ++i)
+				unsigned char* start = data;
+				auto end = data + data_len;
+				while(start!=end)
 				{
-					auto ch_p = data[i];
-					auto ret = call_parser_cb(ch_p);
+					auto ret = call_parser_cb(&start,end);
 					if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
 					{
 						PRINTFLOG(BL_ERROR, "call_parser_cb fail ret=%d,status=%d",
 							(int)ret,parser_status_);
 						return ret;
 					}
+					PRINTFLOG(BL_DEBUG, "%p-%p status %d", start, end, (int)ret, parser_status_);
 				}
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}
@@ -76,21 +82,24 @@ namespace hnw
 				return true;
 			}
 
-			virtual HNW_BASE_ERR_CODE call_parser_cb(const unsigned char ch)
+			virtual HNW_BASE_ERR_CODE call_parser_cb(unsigned char** start,
+				 unsigned char* const  end)
 			{
 				PARSER_CB cb= default_parser_cb_;
 				auto f = parser_cb_map_.find(parser_status_);
 				if (parser_cb_map_.end() != f)
 					cb = f->second;
 				if (cb)
-					return cb(ch);
+					return cb(start,end);
 				return HNW_BASE_ERR_CODE::HNW_HTTP_PARSER_CB_IS_EMPTY;
 			}
 
-			virtual HNW_BASE_ERR_CODE default_parser(const unsigned char ch)
+			virtual HNW_BASE_ERR_CODE default_parser(unsigned char** start,
+				 unsigned char* const end)
 			{
 				PRINTFLOG(BL_ERROR, "default_parser fail status=%d",
 					 parser_status_);
+				*start = end;
 				return HNW_BASE_ERR_CODE::HNW_HTTP_PARSER_CB_IS_DEFAULT;
 			}
 		public:

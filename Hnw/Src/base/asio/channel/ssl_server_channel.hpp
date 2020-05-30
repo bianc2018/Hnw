@@ -132,6 +132,16 @@ namespace hnw
 
                     return HNW_BASE_ERR_CODE::HNW_BASE_OK;
                 }
+                else if (SET_SSL_SERVER_TEMP_DH_FILE_PATH == config_type)
+                {
+                    char* pth = (char*)data;
+                    PRINTFLOG(BL_DEBUG, "server private_key file path is setd %s", pth);
+                    // ctx_.use_certificate_chain_file(pth);
+                   // ctx_.use_certificate_file(pth, boost::asio::ssl::context::file_format::pem);
+                    ctx_.use_tmp_dh_file(pth);
+
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
                 else
                     return ASIOTcpServerChannel::config(config_type,data,data_len);
             }

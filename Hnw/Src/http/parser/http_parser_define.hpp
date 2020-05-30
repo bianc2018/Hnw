@@ -79,16 +79,70 @@ namespace hnw
 			return res;
 		}
 
-		//获取对应的MIME
+		//获取对应的MIME .mp4
 		static std::string http_mime(const std::string& ext, const std::string& defualt_d = HTML_MIME)
 		{
-			return defualt_d;
+			static std::map<std::string, std::string> m = \
+			{
+				{ ".aac", "audio/aac" },
+				{ ".abw","application/x-abiword" },
+				{ ".avi","video/x-msvideo" },
+				{ ".bmp","image/bmp" },
+				{ ".bz","application/x-bzip" },
+				{ ".bz2","application/x-bzip2" },
+				{ ".css","text/css" },
+				{ ".csv","text/csv" },
+				{ ".doc","application/msword" },
+				{ ".docx","application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+				{ ".epub","application/epub+zip" },
+				{ ".gif","image/gif" },
+				{ ".htm","text/html" },
+				{ ".html","text/html" },
+				{ ".ico","image/vnd.microsoft.icon" },
+				{ ".jar","application/java-archive" },
+				{ ".jpeg","image/jpeg" },
+				{ ".jpg","image/jpeg" },
+				{ ".js","text/javascript" },
+				{ ".json","application/json" },
+				{ ".mp3","audio/mpeg" },
+				{ ".mpeg","video/mpeg" },
+				{ ".png","image/png" },
+				{ ".rar","application/x-rar-compressed" },
+				{ ".txt","text/plain" },
+				{ ".ttf","font/ttf" },
+				{ ".wav","audio/wav" },
+				{ ".xls","application/vnd.ms-excel" },
+				{ ".xlsx","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+				{ ".xml","application/xml" },
+				{ ".zip","application/zip" },
+				{ ".mp4","video/mpeg4" },
+				{ ".rmvb","application/vnd.rn-realmedia-vbr" },
+				{ ".zip","application/zip" },
+				{ ".zip","application/zip" },
+			};
+			auto p = m.find(ext);
+			if (p == m.end())
+				return defualt_d;
+			return p->second;
 		}
 
 		//获取状态说明
 		static std::string http_reasion(const std::string& status, const std::string& defualt_r = "NONE")
 		{
-			return defualt_r;
+			static std::map<std::string, std::string> m =\
+			{ 
+				{ "200","OK" },
+				{ "400","Bad Request" },
+				{ "401","Unauthorized" },
+				{ "403","Forbidden" },
+				{ "404","Not Found" },
+				{ "405","Internal Server Error" },
+				{ "503","Server Unavailable" },
+			};
+			auto p = m.find(status);
+			if (p == m.end())
+				return defualt_r;
+			return p->second;
 		}
 
 		//解析url
@@ -126,7 +180,13 @@ namespace hnw
 			}
 			else
 			{
-				out.host = url.substr(pos);
+				auto str = url.substr(pos);
+				auto v = split(str, ":");
+				out.host = v[0];
+				if (v.size() >= 2)
+				{
+					out.port = v[1];
+				}
 				return true;
 			}
 			p = url.find("?", pos);

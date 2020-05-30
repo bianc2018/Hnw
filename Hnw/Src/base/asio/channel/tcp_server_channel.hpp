@@ -139,6 +139,35 @@ namespace hnw
                 return HNW_BASE_ERR_CODE::HNW_BASE_EMPTY_SOCKET;
             }
         
+            //≈‰÷√≤Œ ˝
+            virtual HNW_BASE_ERR_CODE config(int config_type, void* data, size_t data_len)
+            {
+                if (SET_SERVER_ACCEPT_NUM == config_type)
+                {
+                    if (data)
+                    {
+                        auto p = (size_t*)data;
+                        if (*p == 0)
+                        {
+                            PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE recv_buff_size_ must be !=0");
+                            return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                        }
+                        set_accept_num(*p);
+                        return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                    }
+                    else
+                    {
+                        PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE config error data must be size_t*");
+                        return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                    }
+                }
+                else
+                {
+                    return Channel::config(config_type, data, data_len);
+                }
+
+
+            }
         public:
             HNW_BASE_ERR_CODE set_accept_num(size_t num)
             {
