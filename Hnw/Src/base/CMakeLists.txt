@@ -14,11 +14,11 @@ SET_TARGET_PROPERTIES(HnwBase PROPERTIES VERSION ${HNW_VERSION})
 SET_TARGET_PROPERTIES(HnwBaseStatic PROPERTIES VERSION ${HNW_VERSION})
 
 if(OpenSSL_FOUND)
-target_link_libraries(HnwBase  ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto)
-target_link_libraries(HnwBaseStatic  ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(HnwBase PRIVATE ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto Crypt32)
+target_link_libraries(HnwBaseStatic PRIVATE ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto Crypt32)
 elseif()
-target_link_libraries(HnwBase  ${DEFAULT_LIB})
-target_link_libraries(HnwBaseStatic  ${DEFAULT_LIB})
+target_link_libraries(HnwBase PRIVATE  ${DEFAULT_LIB})
+target_link_libraries(HnwBaseStatic PRIVATE  ${DEFAULT_LIB})
 endif()
 
 install(TARGETS HnwBase HnwBaseStatic
