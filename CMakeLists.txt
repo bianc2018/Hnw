@@ -54,8 +54,9 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_subdirectory ("./Hnw/Src/base")
 add_subdirectory ("./Hnw/Src/http")
 add_subdirectory ("./Hnw/Src/ssh")
+if(BUILD_HNW_EXAMPLE)
 add_subdirectory ("./Hnw/Example")
-
+endif()
 
 
 #打包
