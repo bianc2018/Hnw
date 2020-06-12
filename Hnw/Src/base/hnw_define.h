@@ -237,6 +237,15 @@ enum class HNW_BASE_EVENT_TYPE
     HNW_BASE_CLOSED,
 };
 
+/*日志级别*/
+enum BLOG_LEVEL
+{
+    BL_DEBUG,
+    BL_INFO,
+    BL_WRAN,
+    BL_ERROR,
+};
+
 ///*
 //    基础事件类
 //*/
@@ -283,17 +292,17 @@ struct HnwBaseRecvDataEvent
 
 typedef HnwBaseRecvDataEvent HnwBaseSendDataEvent;
 
+//事件回调
 typedef std::function<void(std::int64_t handle, \
     int type, std::shared_ptr<void> event_data)> HNW_EVENT_CB;
 
-/*日志级别*/
-enum BLOG_LEVEL
-{
-    BL_DEBUG,
-    BL_INFO,
-    BL_WRAN,
-    BL_ERROR,
-};
+//日志回调
+typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_LOG_CB;
+
+//内存申请回调
+typedef std::function<std::shared_ptr<char>(size_t memory_size)> HNW_MAKE_SHARED_CB;
+
+
 
 template<typename Ty, typename ...Args>
 static std::shared_ptr<Ty> make_shared_safe(Args&&...args)

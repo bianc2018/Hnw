@@ -69,6 +69,11 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int 
     return service.config(handle, config_type, data, data_len);
 }
 
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_BroadCast(std::string& ip)
+{
+	return service.broad_cast(ip);
+}
+
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string& host, std::vector<NetPoint>& addr, const std::string& service_d)
 {
     return service.query_dns(host, addr, service_d);

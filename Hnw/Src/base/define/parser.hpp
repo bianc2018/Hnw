@@ -65,7 +65,7 @@ namespace hnw
 							(int)ret,parser_status_);
 						return ret;
 					}
-					PRINTFLOG(BL_DEBUG, "%p-%p status %d", start, end, (int)ret, parser_status_);
+					PRINTFLOG(BL_DEBUG, "%p-%p status %d", start, end, parser_status_);
 				}
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}

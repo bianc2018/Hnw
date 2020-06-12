@@ -81,6 +81,7 @@ namespace hnw
                 boost::system::error_code ec;
                 try
                 {
+                   // boost::asio::ip::address_v4::broadcast();
                     boost::asio::ip::udp::resolver resolver(service_);
                     remote_point_ = *resolver.resolve(remote.ip, std::to_string(remote.port)).begin();
                 }
@@ -105,6 +106,7 @@ namespace hnw
             //关闭一个通道
             virtual HNW_BASE_ERR_CODE close()
             {
+                
                 if (socket_.is_open())
                 {
                     try

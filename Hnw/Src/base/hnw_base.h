@@ -7,13 +7,6 @@
 
 #include "hnw_define.h"
 
-//日志回调
-typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_LOG_CB;
-
-//内存申请回调
-typedef std::function<std::shared_ptr<char>(size_t memory_size)> HNW_MAKE_SHARED_CB;
-
-
 //增加通道
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Add_Channnel(HNW_CHANNEL_TYPE type\
     , const NetPoint& local, HNW_HANDLE& handle);
@@ -49,6 +42,9 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int 
 //查询dns
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string &host,
     std::vector<NetPoint> &addr, const std::string& service="http");
+
+//获取广播地址
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_BroadCast(std::string &ip);
 #endif // !BNS_H_
 
 

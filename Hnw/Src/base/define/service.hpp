@@ -227,6 +227,12 @@ namespace hnw
             PRINTFLOG(BL_DEBUG, " no support :query_dns");
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }
+
+        virtual HNW_BASE_ERR_CODE broad_cast(std::string& ip)
+        {
+            PRINTFLOG(BL_DEBUG, " no support :broad_cast");
+            return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
     private:
 
         //事件回调 可以考虑异步处理

@@ -10,7 +10,7 @@
 #include "../channel/tcp_client_channel.hpp"
 #include "../channel/tcp_server_channel.hpp"
 #include "../channel/udp_channel.hpp"
-#ifdef _USE_OPENSSL
+#ifdef _HNW_USE_OPENSSL
 #include "../channel/ssl_client_channel.hpp"
 #include "../channel/ssl_server_channel.hpp"
 #endif
@@ -141,7 +141,7 @@ namespace hnw
                     if (ch)
                         PRINTFLOG(BL_DEBUG, "new a UdpChannel handle[%I64d]", ch->get_handle());
                 }
-#ifdef _USE_OPENSSL
+#ifdef _HNW_USE_OPENSSL
                 else if (HNW_CHANNEL_TYPE::SSL_CLIENT == type)
                 {
                     ch = make_shared_safe<ASIOSSLClientChannel>(service_);
@@ -231,6 +231,20 @@ namespace hnw
                 }
                 
             }
+
+            virtual HNW_BASE_ERR_CODE broad_cast(std::string& ip)
+            {
+                boost::system::error_code ec;
+                auto bc = boost::asio::ip::address_v4::from_string(ip,ec);
+                ip = boost::asio::ip::address_v4::broadcast(bc,bc.netmask(bc)).to_string();
+                if (ec)
+                {
+                    PRINTFLOG(BL_ERROR, "broad_cast error input %s what=%s",
+                        ip.c_str(), ec.message().c_str());
+                    return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                }
+                return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
         private:
             //ÔËÐÐÆÚ
             void run_worker()
@@ -239,6 +253,7 @@ namespace hnw
                 service_.run();
                 PRINTFLOG(BL_DEBUG, "run_worker is end!");
             }
+
 
         private:
            
