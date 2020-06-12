@@ -7,21 +7,23 @@ cmake_minimum_required (VERSION 3.8)
 #include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 #include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/OpenSSL.cmake)
 
-add_library(HnwBase SHARED  "hnw_base.cpp" "hnw_base.h")
-add_library(HnwBaseStatic   "hnw_base.cpp" "hnw_base.h")
+if(BUILD_HNW_STATIC)
+add_library(HnwBase  "hnw_base.cpp" "hnw_base.h")
+message(STATUS "BUILD_HNW_STATIC ON ,build static HnwBase")
+else()
+add_library(HnwHttp SHARED  "hnw_http.h" "hnw_http.cpp" )
+message(STATUS "BUILD_HNW_STATIC OFF ,build shared HnwBase")
+endif()
 
 SET_TARGET_PROPERTIES(HnwBase PROPERTIES VERSION ${HNW_VERSION})
-SET_TARGET_PROPERTIES(HnwBaseStatic PROPERTIES VERSION ${HNW_VERSION})
 
 if(OpenSSL_FOUND)
 target_link_libraries(HnwBase PRIVATE ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto Crypt32)
-target_link_libraries(HnwBaseStatic PRIVATE ${DEFAULT_LIB} OpenSSL::SSL OpenSSL::Crypto Crypt32)
-elseif()
+else()
 target_link_libraries(HnwBase PRIVATE  ${DEFAULT_LIB})
-target_link_libraries(HnwBaseStatic PRIVATE  ${DEFAULT_LIB})
 endif()
 
-install(TARGETS HnwBase HnwBaseStatic
+install(TARGETS HnwBase
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION bin
 	ARCHIVE DESTINATION lib

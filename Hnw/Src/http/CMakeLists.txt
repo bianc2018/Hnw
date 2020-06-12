@@ -7,16 +7,18 @@ cmake_minimum_required (VERSION 3.8)
 
 include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src/base)
 
+if(BUILD_HNW_STATIC)
+add_library(HnwHttp "hnw_http.h" "hnw_http.cpp" )
+message(STATUS "BUILD_HNW_STATIC ON ,build static HnwHttp")
+else()
 add_library(HnwHttp SHARED  "hnw_http.h" "hnw_http.cpp" )
-add_library(HnwHttpStatic "hnw_http.h" "hnw_http.cpp" )
+message(STATUS "BUILD_HNW_STATIC OFF ,build shared HnwHttp")
+endif()
 
 SET_TARGET_PROPERTIES(HnwHttp PROPERTIES VERSION ${HNW_VERSION})
-SET_TARGET_PROPERTIES(HnwHttpStatic PROPERTIES VERSION ${HNW_VERSION})
-
 target_link_libraries(HnwHttp  HnwBase ${DEFAULT_LIB} )
-target_link_libraries(HnwHttpStatic  HnwBaseStatic ${DEFAULT_LIB} )
 
-install(TARGETS HnwHttp  HnwHttpStatic
+install(TARGETS HnwHttp 
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION bin
 	ARCHIVE DESTINATION lib

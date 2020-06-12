@@ -42,7 +42,7 @@ if(OpenSSL_FOUND)
 ADD_DEFINITIONS(-D_HNW_USE_OPENSSL=1)
 include_directories(${OpenSSL_INCLUDE_DIR})
 link_directories(${OpenSSL_LIBRARY_DIR})
-elseif()
+else()
 message(STATUS "OpenSSL not fonud")
 endif()
 
@@ -56,6 +56,9 @@ add_subdirectory ("./Hnw/Src/http")
 add_subdirectory ("./Hnw/Src/ssh")
 if(BUILD_HNW_EXAMPLE)
 add_subdirectory ("./Hnw/Example")
+message(STATUS "BUILD_HNW_EXAMPLE ON ,build Example")
+else()
+message(STATUS "BUILD_HNW_EXAMPLE ON ,build Example")
 endif()
 
 
