@@ -35,7 +35,7 @@
       "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x86_x64" ],
+      "inheritEnvironments": [ "msvc_x64" ],
       "variables": [],
       "intelliSenseMode": "windows-msvc-x64"
     },
@@ -48,7 +48,7 @@
       "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x86_x64" ],
+      "inheritEnvironments": [ "msvc_x64" ],
       "variables": [],
       "intelliSenseMode": "windows-msvc-x64"
     }
