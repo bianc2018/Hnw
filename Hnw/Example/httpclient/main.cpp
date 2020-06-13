@@ -10,8 +10,8 @@
 static std::string path = "/";
 
 static clock_t time_ms = ::clock();
-static std::atomic_int64_t req_num = 0;
-static std::atomic_int64_t con_num = 0;
+static std::atomic_int64_t req_num = { 0 };
+static std::atomic_int64_t con_num = { 0 };
 static std::vector<HNW_HANDLE> handles;
 static HttpParam param;
 void event_cb(std::int64_t handle, \
@@ -84,7 +84,7 @@ void event_cb(std::int64_t handle, \
 }
 
 
-std::atomic_bool flag = false;
+std::atomic_bool flag = { false };
 void check_time()
 {
     while (flag)
