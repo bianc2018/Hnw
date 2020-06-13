@@ -1,4 +1,4 @@
-﻿# 
+# 
 # HQL Base NetWork lib
 #
 cmake_minimum_required (VERSION 3.8)
