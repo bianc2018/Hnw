@@ -26,7 +26,7 @@ if(WIN32)
 elseif(UNIX)
      message("UNIX 编译设置")
      #通用的底层库 default lib
-     set(DEFAULT_LIB pthread boost_system)
+     #set(DEFAULT_LIB pthread boost_system)
 endif()
 
 #依赖 boost openss
