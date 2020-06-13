@@ -22,6 +22,7 @@ set(CMAKE_CXX_STANDARD 11)
 if(WIN32)
       message("WIN32 编译设置")
       ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
+      set(DEFAULT_LIB Crypt32)
 elseif(UNIX)
      message("UNIX 编译设置")
      #通用的底层库 default lib

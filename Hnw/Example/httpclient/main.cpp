@@ -28,7 +28,7 @@ void event_cb(std::int64_t handle, \
 
         auto request = std::make_shared<HnwHttpRequest>();
         request->head.insert(std::make_pair("Connection", "Close"));
-        request->url = path;
+        request->url = "/python/cpython/archive/v3.7.3.tar.gz";
        // request->body = std::string(1024*1024*20 , 'c');
         req_num = 0;
         time_ms = clock();
@@ -38,9 +38,9 @@ void event_cb(std::int64_t handle, \
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA == type)
     {
-        /*auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+        auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
         printf("handle:%lld is recv data :%s \n", handle, std::string(data->buff
-            , data->buff_len).c_str());*/
+            , data->buff_len).c_str());
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
     {
@@ -70,6 +70,7 @@ void event_cb(std::int64_t handle, \
         auto t = (clock() - time_ms);
         printf("[%lld]commit all %lld byte,usd %d ms %f KB/s\n", con_num.load(),
             data, t, data / float(t));
+        printf("%s\n", response->body.c_str());
         HnwHttp_Close(handle);
         //HnwHttp_Start(param, event_cb, handle);
     }
@@ -104,12 +105,12 @@ int main(int argc, char* argv[])
     //HnwHttp_SetLogCB(NULL);
 
     std::cout << "input thread num:";
-    size_t thread_num = 10000;
+    size_t thread_num = 1;
    // std::cin >> thread_num;
 
     std::cout << "input home:";
     
-    param.host = "www.baidu.com";
+    param.host = "https://github.com/python/cpython/archive/v3.7.3.tar.gz";
     param.peer_type = Client;
     //std::cin >> param.host;
 
