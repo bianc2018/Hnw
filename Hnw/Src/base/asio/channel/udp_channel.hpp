@@ -103,6 +103,12 @@ namespace hnw
                 return async_send(message, message_size);
             }
 
+            //发送数据
+            virtual HNW_BASE_ERR_CODE send(HNW_SEND_CB cb)
+            {
+                return async_send(nullptr, 0, cb);
+            }
+
             //关闭一个通道
             virtual HNW_BASE_ERR_CODE close()
             {
@@ -131,12 +137,13 @@ namespace hnw
             
         private:
             //异步发送数据
-            HNW_BASE_ERR_CODE async_send(std::shared_ptr<void> buff, size_t buff_len, size_t beg = 0)
+            HNW_BASE_ERR_CODE async_send(std::shared_ptr<void> buff,
+                size_t buff_len, size_t beg = 0,  HNW_CALL complete = nullptr)
             {
                 //写完数据后的回调函数
                 auto self = shared_from_this();
                 auto send_handler = \
-                    [this, self, buff_len, beg, buff](boost::system::error_code ec, std::size_t s)
+                    [this, self, buff_len, beg, buff, complete](boost::system::error_code ec, std::size_t s)
                 {
 
                     if (ec)
@@ -154,6 +161,8 @@ namespace hnw
                        // if (on_complate_)
                         //    on_complate_(true);
                         EVENT_SEND_CB(buff, buff_len);
+                        if (complete)
+                            complete();
                         return;
                     }
                     //未写完
@@ -169,6 +178,42 @@ namespace hnw
                     , remote_point_
                     , send_handler);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
+
+            //异步发送数据
+            HNW_BASE_ERR_CODE async_send(std::shared_ptr<void> buff, size_t buff_len,
+                HNW_SEND_CB cb)
+            {
+
+                //申请缓存
+                if (nullptr == buff || buff_len != send_buff_size_)
+                {
+                    buff_len = send_buff_size_;
+                    buff = MAKE_SHARED(send_buff_size_);
+                    if (nullptr == buff)
+                    {
+                        PRINTFLOG(BL_ERROR, "get cache error ch :%I64d", handle_);
+                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL, "not alloc data");
+                        //close();
+                        return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
+                    }
+                }
+
+                //读取数据
+                size_t read_data_size = 0;
+                if (cb)
+                    read_data_size = cb(buff, buff_len);
+
+                //完毕
+                if (0 == read_data_size)
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+
+                //发送
+                return async_send(buff, read_data_size, 0, [this, buff, buff_len, cb]()mutable
+                    {
+                        //继续发送
+                        async_send(buff, buff_len, cb);
+                    });
             }
 
             //异步读数据

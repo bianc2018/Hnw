@@ -5,6 +5,7 @@
 #ifndef SSH_CHANNEL_HPP_
 #define SSH_CHANNEL_HPP_
 #include "ssh_define.hpp"
+#include <thread>
 namespace ssh
 {
     const int CHANNEL_READ_TIMEOUT = 3000;
@@ -27,7 +28,7 @@ namespace ssh
 
         std::string Read(int timeout = CHANNEL_READ_TIMEOUT)
         {
-            string data;
+            std::string data;
             if (NULL == channel_)
             {
                 return data;
@@ -49,14 +50,15 @@ namespace ssh
                 if (rc < 1)
                 {
                     timeout -= 50;
-                    usleep(50 * 1000);
+                    std::this_thread::sleep_for(std::chrono::seconds(50));
+                    //usleep(50 * 1000);
                     continue;
                 }
 
                 if (fds->revents & LIBSSH2_POLLFD_POLLIN)
                 {
                     char buffer[64 * 1024] = {0};
-                    size_t n = libssh2_channel_read(m_channel, buffer, sizeof(buffer));
+                    size_t n = libssh2_channel_read(channel_, buffer, sizeof(buffer));
                     if (n == LIBSSH2_ERROR_EAGAIN)
                     {
                         continue;
@@ -68,7 +70,7 @@ namespace ssh
                     }
                     else
                     {
-                        data += string(buffer);
+                        data += std::string(buffer);
                         /*if ("" == strend)
                         {
                             return data;
@@ -81,21 +83,22 @@ namespace ssh
                     }
                 }
                 timeout -= 50;
-                usleep(50 * 1000);
+                std::this_thread::sleep_for(std::chrono::seconds(50));
+                //usleep(50 * 1000);
             }
             delete fds;
             fds = nullptr;
           //  cout << "read data timeout" << endl;
             return data;
         }
-        bool   Write(const string& data)
+        bool   Write(const std::string& data)
         {
             if (NULL == channel_)
             {
                 return false;
             }
 
-            string send_data = data + "\n";
+            std::string send_data = data + "\n";
             return libssh2_channel_write_ex(channel_, 0, send_data.c_str(), send_data.size()) == data.size();
         }
     private:

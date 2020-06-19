@@ -23,6 +23,7 @@ namespace hnw
             :make_shared_(hnw::default_make_shared),
             log_cb_(hnw::default_log_print),
             recv_buff_size_(hnw::default_recv_buff_size),
+            send_buff_size_(hnw::default_send_buff_size),
             accept_num_(hnw::default_accept_num)
         {}
         virtual ~Service()
@@ -126,6 +127,25 @@ namespace hnw
                     return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
                 }
             }
+            else if (SET_SEND_BUFF_SIZE == config_type)
+            {
+                if (data)
+                {
+                    auto p = (size_t*)data;
+                    if (*p == 0)
+                    {
+                        PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE recv_buff_size_ must be !=0");
+                        return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                    }
+                    send_buff_size_ = *p;
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "SET_RECV_BUFF_SIZE config error data must be size_t*");
+                    return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                }
+            }
             else if (SET_SERVER_ACCEPT_NUM == config_type)
             {
                 if (data)
@@ -181,6 +201,25 @@ namespace hnw
             }
             memcpy(cache.get(), message.c_str(), message_size);
             return send(handle, cache, message_size);
+        }
+
+
+        //发送数据
+        virtual HNW_BASE_ERR_CODE send_cb(HNW_HANDLE handle,  HNW_SEND_CB cb)
+        {
+            auto ch = get_channel(handle);
+            if (nullptr == ch)
+            {
+                PRINTFLOG(BL_ERROR, "ch[%lld] is no exist!", handle);
+                return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
+            }
+            if (nullptr == cb)
+            {
+                PRINTFLOG(BL_ERROR, "ch[%lld] send cb is nullptr", handle);
+                return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
+            PRINTFLOG(BL_INFO, "channel[%I64d] send data cb", handle);
+            return ch->send(cb);
         }
 
         //设置事件回调
@@ -333,6 +372,9 @@ namespace hnw
 
         //接收数据缓冲区大小
         size_t recv_buff_size_;
+
+        //接收数据缓冲区大小
+        size_t send_buff_size_;
 
         //接受的线程大小
         size_t accept_num_;

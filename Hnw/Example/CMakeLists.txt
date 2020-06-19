@@ -11,6 +11,9 @@ include_directories(${PROJECT_SOURCE_DIR}/Hnw/Src/ssh)
 add_executable(HnwTcpClient "tcpclient/main.cpp")
 target_link_libraries(HnwTcpClient  HnwBase ${DEFAULT_LIB})
 
+add_executable(HnwTcpSendFile "tcpsendfile/main.cpp")
+target_link_libraries(HnwTcpSendFile  HnwBase ${DEFAULT_LIB})
+
 add_executable(HnwTcpServer "tcpserver/main.cpp")
 target_link_libraries(HnwTcpServer  HnwBase ${DEFAULT_LIB})
 
@@ -35,6 +38,19 @@ target_link_libraries(HnwHttpServer  HnwHttp ${DEFAULT_LIB})
 if(OpenSSL_FOUND)
 add_executable(SSL_Test "SSLTest/main.cpp")
 target_link_libraries(SSL_Test OpenSSL::SSL OpenSSL::Crypto ${DEFAULT_LIB})
+endif()
+
+
+#“¿¿µ LibSsh2
+if(OpenSSL_FOUND)
+	find_package(Libssh2)
+if(Libssh2_FOUND)
+	ADD_DEFINITIONS(-D_HNW_USE_LIBSSH2=1)
+	include_directories(${Libssh2_INCLUDE_DIR})
+	link_directories(${Libssh2_LIBRARY_DIR})
+elseif()
+	message(STATUS "Libssh2 not fonud")
+endif()
 endif()
 
 #include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/LibSsh2.cmake)

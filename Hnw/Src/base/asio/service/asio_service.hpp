@@ -188,6 +188,7 @@ namespace hnw
                     this, std::placeholders::_1, std::placeholders::_2));
                 ch->set_shared_cb(std::bind(&AsioService::get_cache, this, std::placeholders::_1));
                 ch->config(SET_RECV_BUFF_SIZE, (void*)&recv_buff_size_, sizeof(recv_buff_size_));
+                ch->config(SET_SEND_BUFF_SIZE, (void*)&send_buff_size_, sizeof(send_buff_size_));
                 ch->config(SET_SERVER_ACCEPT_NUM, (void*)&accept_num_, sizeof(accept_num_));
                 auto err = ch->init(local);
 

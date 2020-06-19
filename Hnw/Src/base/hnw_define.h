@@ -19,18 +19,22 @@
 #define USE_BOOST_ASIO
 
 //配置项
-//设置SSL 服务器证书路径 输入 char[128]
-#define  SET_SSL_SERVER_CERT_FILE_PATH 1
-//私有密钥 private_key输入 char[128]
-#define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 2
-//交换密钥
-#define SET_SSL_SERVER_TEMP_DH_FILE_PATH 3
+//设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
+#define SET_RECV_BUFF_SIZE 0
 
 //设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
-#define SET_RECV_BUFF_SIZE 4
+#define SET_SEND_BUFF_SIZE 1
 
 //设置 接受链接的线程数 输入 size_t server类型的通道有效而且不可在accept之后设置，不指定通道则之后创建的通道使用这个大小
-#define SET_SERVER_ACCEPT_NUM 5
+#define SET_SERVER_ACCEPT_NUM 3
+
+//设置SSL 服务器证书路径 输入 char[128]
+#define  SET_SSL_SERVER_CERT_FILE_PATH 10
+//私有密钥 private_key输入 char[128]
+#define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 11
+//交换密钥
+#define SET_SSL_SERVER_TEMP_DH_FILE_PATH 12
+
 
 //错误码
 enum class HNW_BASE_ERR_CODE
@@ -302,7 +306,8 @@ typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_L
 //内存申请回调
 typedef std::function<std::shared_ptr<char>(size_t memory_size)> HNW_MAKE_SHARED_CB;
 
-
+//数据读取回调
+typedef std::function<size_t(std::shared_ptr<void> buff, size_t buff_size)> HNW_SEND_CB;
 
 template<typename Ty, typename ...Args>
 static std::shared_ptr<Ty> make_shared_safe(Args&&...args)

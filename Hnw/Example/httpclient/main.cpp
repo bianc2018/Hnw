@@ -91,7 +91,7 @@ void check_time()
     {
         auto data = req_num.load();
         auto t = (clock() - time_ms);
-        printf("commit all %d byte,usd %d ms %f KB/s\n", data, t, data/float(t));
+        printf("commit all %lld byte,usd %lld ms %f KB/s\n", data, t, data/float(t));
 
         //«Â¡„
         //req_num = 0;

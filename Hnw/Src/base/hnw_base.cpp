@@ -49,6 +49,11 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Send_String(HNW_HANDLE handle,
     return  service.send_string(handle,message);
 }
 
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Send_Cb(HNW_HANDLE handle, HNW_SEND_CB cb)
+{
+	return service.send_cb(handle,cb);
+}
+
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetEvntCB(HNW_HANDLE handle, HNW_EVENT_CB cb)
 {
     return  service.set_event_cb(handle,cb);

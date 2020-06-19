@@ -113,22 +113,6 @@ HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Start(
     HNW_EVENT_CB cb,
     HNW_HANDLE& handle);
 
-////启动服务器
-//HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartServer(
-//    const std::string& host,//本地端口
-//    HNW_EVENT_CB cb,
-//    HNW_HANDLE& handle);
-//
-////设置服务器参数
-//HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_SetSSLServerParam(HNW_HANDLE handle,
-//    const std::string& cert_file, const std::string& pri_key_file);
-//
-////启动会话
-//HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_StartSession(
-//    const std::string& host,//服务主机
-//    HNW_EVENT_CB cb,
-//    HNW_HANDLE& handle);
-
 //发送请求
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Request(
     HNW_HANDLE handle,std::shared_ptr<HnwHttpRequest> req);

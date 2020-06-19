@@ -66,10 +66,16 @@ EVENT_CB(opt,nullptr)
 
 namespace hnw
 {
+    //回调
+    typedef std::function<void()> HNW_CALL;
+
     //接收缓存 1M
     const size_t default_recv_buff_size = 1024 * 1024;
 
     //接收缓存 1M
+    const size_t default_send_buff_size = 1024 * 1024;
+
+    //接收线程数目
     const size_t default_accept_num = 5;
 
     //默认的函数

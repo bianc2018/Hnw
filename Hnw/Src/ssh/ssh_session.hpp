@@ -12,15 +12,14 @@ namespace ssh
         Session(const std::string& ip, int port = 22)
             :ip_(ip),port_(port),sock_(-1),session_(nullptr)
         {
-            libssh2_init(0);
+            
         }
         ~Session(void)
         {
             Disconnect();
-            libssh2_exit();
         }
 
-        bool Connect(const string& username, const string& userpwd)
+        bool Connect(const std::string& username, const std::string& userpwd)
         {
             sock_ = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -28,7 +27,7 @@ namespace ssh
             sin.sin_family = AF_INET;
             sin.sin_port = htons(port_);
             sin.sin_addr.s_addr = inet_addr(ip_.c_str());
-            if (connect(m_sock, (sockaddr*)(&sin), sizeof(sockaddr_in)) != 0)
+            if (connect(sock_, (sockaddr*)(&sin), sizeof(sockaddr_in)) != 0)
             {
                 Disconnect();
                 return false;
@@ -42,8 +41,8 @@ namespace ssh
             }
 
             int auth_pw = 0;
-            string fingerprint = libssh2_hostkey_hash(session_, LIBSSH2_HOSTKEY_HASH_SHA1);
-            string userauthlist = libssh2_userauth_list(session_, username.c_str(), (int)username.size());
+            std::string fingerprint = libssh2_hostkey_hash(session_, LIBSSH2_HOSTKEY_HASH_SHA1);
+            std::string userauthlist = libssh2_userauth_list(session_, username.c_str(), (int)username.size());
             if (strstr(userauthlist.c_str(), "password") != NULL)
             {
                 auth_pw |= 1;
@@ -89,7 +88,7 @@ namespace ssh
         }
         bool Disconnect(void)
         {
-            f(session_)
+            if(session_)
             {
                 libssh2_session_disconnect(session_, "Bye bye, Thank you");
                 libssh2_session_free(session_);
@@ -107,7 +106,7 @@ namespace ssh
             return true;
         }
 
-        std::shared_ptr<Channel> CreateChannel(const string& ptyType = "vanilla")
+        std::shared_ptr<Channel> CreateChannel(const std::string& ptyType = "vanilla")
         {
             if (NULL == session_)
             {
@@ -116,7 +115,7 @@ namespace ssh
 
             LIBSSH2_CHANNEL* channel = NULL;
             /* Request a shell */
-            if (!(channel = libssh2_channel_open_session(m_session)))
+            if (!(channel = libssh2_channel_open_session(session_)))
             {
                 return NULL;
             }
@@ -138,14 +137,48 @@ namespace ssh
                 return NULL;
             }
 
-            auto ret = std::shared_ptr<Channel>(channel);
-            std::cout << ret->Read() << std::endl;
+            auto ret = std::make_shared<Channel>(channel);
+           // std::cout << ret->Read() << std::endl;
             return ret;
         }
 
     public:
        /* static void S_KbdCallback(const char*, int, const char*, int, int, const LIBSSH2_USERAUTH_KBDINT_PROMPT*, LIBSSH2_USERAUTH_KBDINT_RESPONSE*, void** a);
         static string s_password;*/
+
+        //µÈ´ýÊÂ¼þ
+        int waitsocket()
+        {
+            if (nullptr == session_)
+                return - 1;
+
+            struct timeval timeout;
+            int rc;
+            fd_set fd;
+            fd_set* writefd = NULL;
+            fd_set* readfd = NULL;
+            int dir;
+
+            timeout.tv_sec = 10;
+            timeout.tv_usec = 0;
+
+            FD_ZERO(&fd);
+
+            FD_SET(sock_, &fd);
+
+            /* now make sure we wait in the correct direction */
+            dir = libssh2_session_block_directions(session_);
+
+            if (dir & LIBSSH2_SESSION_BLOCK_INBOUND)
+                readfd = &fd;
+
+            if (dir & LIBSSH2_SESSION_BLOCK_OUTBOUND)
+                writefd = &fd;
+
+            rc = select(sock_ + 1, readfd, writefd, NULL, &timeout);
+
+            return rc;
+        }
 
     private:
         std::string ip_;

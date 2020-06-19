@@ -14,7 +14,9 @@ namespace hnw
     {
     public:
         Channel()
-            :handle_(generate_handle()), recv_buff_size_(hnw::default_recv_buff_size)
+            :handle_(generate_handle()), 
+            recv_buff_size_(hnw::default_recv_buff_size),
+            send_buff_size_(hnw::default_send_buff_size)
         {}
 
         virtual ~Channel()
@@ -76,6 +78,13 @@ namespace hnw
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }
 
+        //发送数据
+        virtual HNW_BASE_ERR_CODE send(HNW_SEND_CB cb)
+        {
+            PRINTFLOG(BL_DEBUG, "this channel no support :send");
+            return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
+
         //关闭一个通道
         virtual HNW_BASE_ERR_CODE close()
         {
@@ -106,6 +115,26 @@ namespace hnw
                     return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
                 }
             }
+            else if (SET_SEND_BUFF_SIZE == config_type)
+            {
+                if (data)
+                {
+                    auto p = (size_t*)data;
+                    if (*p == 0)
+                    {
+                        PRINTFLOG(BL_ERROR, "SET_SEND_BUFF_SIZE recv_buff_size_ must be !=0");
+                        return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                    }
+                    send_buff_size_ = *p;
+                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "SET_SEND_BUFF_SIZE config error data must be size_t*");
+                    return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
+                }
+            }
+
             PRINTFLOG(BL_DEBUG, "this channel no support :config");
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }
@@ -135,6 +164,10 @@ namespace hnw
 
         //接收数据缓冲区大小
         size_t recv_buff_size_;
+
+        //发送缓存
+        //接收数据缓冲区大小
+        size_t send_buff_size_;
     protected:
         HNW_HANDLE handle_;
 
