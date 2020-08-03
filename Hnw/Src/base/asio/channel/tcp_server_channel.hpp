@@ -68,14 +68,14 @@ namespace hnw
                 }
                 PRINTFLOG(BL_INFO, "acceptor is opened");
                 //设置参数，地址可重用
-                acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true), ec);
+               /* acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true), ec);
                 if (ec)
                 {
                     PRINTFLOG(BL_ERROR, "set_option reuse address error local %s:%d what %s", local.ip.c_str(), \
                         local.port, ec.message().c_str());
                     return HNW_BASE_ERR_CODE::HNW_BASE_SET_REUSE_ADDRESS_FAIL;
                 }
-                PRINTFLOG(BL_INFO, "acceptor is set reuse_address");
+                PRINTFLOG(BL_INFO, "acceptor is set reuse_address");*/
                 //绑定地址
                 acceptor_.bind(endpoint, ec);
                 if (ec)
@@ -183,12 +183,7 @@ namespace hnw
             {
                 //创建客户端
                 auto cli = std::make_shared<ASIOTcpClientChannel>(service_);
-                cli->init(NET_INVALID_POINT);
-                cli->set_shared_cb(make_shared_);
-                cli->set_log_cb(log_cb_);
-                cli->set_event_cb(event_cb_);
-                cli->config(SET_RECV_BUFF_SIZE, (void*)&recv_buff_size_, sizeof(recv_buff_size_));
-                cli->config(SET_SEND_BUFF_SIZE, (void*)&send_buff_size_, sizeof(send_buff_size_));
+                cli->init_accept(shared_from_this(), NET_INVALID_POINT);
                 return cli;
             }
 

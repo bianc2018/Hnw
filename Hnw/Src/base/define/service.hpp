@@ -169,7 +169,6 @@ namespace hnw
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
         }
 
-
         //发送数据
         virtual HNW_BASE_ERR_CODE send(HNW_HANDLE handle, \
             std::shared_ptr<char> message, size_t message_size)
@@ -202,7 +201,6 @@ namespace hnw
             memcpy(cache.get(), message.c_str(), message_size);
             return send(handle, cache, message_size);
         }
-
 
         //发送数据
         virtual HNW_BASE_ERR_CODE send_cb(HNW_HANDLE handle,  HNW_SEND_CB cb)
@@ -271,6 +269,42 @@ namespace hnw
         {
             PRINTFLOG(BL_DEBUG, " no support :broad_cast");
             return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
+
+        virtual void* get_userdata(HNW_HANDLE handle)
+        {
+            //找到对应的通道
+            auto ch = get_channel(handle);
+            if (nullptr == ch)
+            {
+                PRINTFLOG(BL_ERROR, "ch[%I64d] is no exist!", handle);
+                return nullptr;
+            }
+            return ch->get_userdata();
+        }
+        virtual HNW_BASE_ERR_CODE set_userdata(HNW_HANDLE handle, void* userdata)
+        {
+            //找到对应的通道
+            auto ch = get_channel(handle);
+            if (nullptr == ch)
+            {
+                PRINTFLOG(BL_ERROR, "ch[%I64d] is no exist!", handle);
+                return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
+            }
+            return ch->set_userdata(userdata);
+        }
+
+        //定时器管理
+        virtual HNW_BASE_ERR_CODE add_timer(size_t time_out_ms,
+            std::function<void()> call,
+            HNW_HANDLE& handle)
+        {
+            auto ret = add_channel(HNW_CHANNEL_TYPE::TIMER, NET_INVALID_POINT, handle);
+            if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
+                return ret;
+            config(handle, SET_TIMER_TIME_OUT_MS, &time_out_ms, sizeof(time_out_ms));
+            config(handle, SET_TIMER_CB, &call, sizeof(call));
+            return connect(handle, NET_INVALID_POINT);
         }
     private:
 

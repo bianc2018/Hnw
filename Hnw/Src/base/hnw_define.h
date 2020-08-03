@@ -21,20 +21,39 @@
 //配置项
 //设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
 #define SET_RECV_BUFF_SIZE 0
+#define GET_RECV_BUFF_SIZE 1
 
 //设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
-#define SET_SEND_BUFF_SIZE 1
+#define SET_SEND_BUFF_SIZE 2
+#define GET_SEND_BUFF_SIZE 3
 
 //设置 接受链接的线程数 输入 size_t server类型的通道有效而且不可在accept之后设置，不指定通道则之后创建的通道使用这个大小
-#define SET_SERVER_ACCEPT_NUM 3
+#define SET_SERVER_ACCEPT_NUM 4
+#define GET_SERVER_ACCEPT_NUM 5
 
 //设置SSL 服务器证书路径 输入 char[128]
 #define  SET_SSL_SERVER_CERT_FILE_PATH 10
+#define  GET_SSL_SERVER_CERT_FILE_PATH 11
 //私有密钥 private_key输入 char[128]
-#define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 11
+#define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 12
+#define  GET_SSL_SERVER_PRI_KEY_FILE_PATH 13
 //交换密钥
-#define SET_SSL_SERVER_TEMP_DH_FILE_PATH 12
+#define SET_SSL_SERVER_TEMP_DH_FILE_PATH 14
+#define GET_SSL_SERVER_TEMP_DH_FILE_PATH 15
 
+//超时
+#define SET_CONNECT_TIME_OUT_MS 16
+#define GET_CONNECT_TIME_OUT_MS 17
+#define SET_RECV_TIME_OUT_MS 18
+#define GET_RECV_TIME_OUT_MS 19
+#define SET_SEND_TIME_OUT_MS 20
+#define GET_SEND_TIME_OUT_MS 21
+
+//设置定时器触发时长回调
+//size_t
+#define SET_TIMER_TIME_OUT_MS 22
+//hnw::HNW_CALL*
+#define SET_TIMER_CB 23
 
 //错误码
 enum class HNW_BASE_ERR_CODE
@@ -60,11 +79,20 @@ enum class HNW_BASE_ERR_CODE
     //链接失败
     HNW_BASE_CONNECT_FAIL,
 
+    //链接超时
+    HNW_BASE_CONNECT_TIME_OUT,
+
     //接收数据失败
     HNW_BASE_RECV_DATA_FAIL,
 
+    //接收数据超时
+    HNW_BASE_RECV_DATA_TIMEOUT,
+
     //发送数据失败
     HNW_BASE_SEND_DATA_FAIL,
+
+    //发送数据超时
+    HNW_BASE_SEND_DATA_TIMEOUT,
 
     //空的事件回调
     HNW_BASE_EMPYTY_EVENT_CB,
@@ -159,12 +187,27 @@ enum class HNW_BASE_ERR_CODE
 
     //http 解析回调为空
     HNW_HTTP_PARSER_CB_IS_EMPTY,
-    
+
     //http 解析回调不可以是默认的
     HNW_HTTP_PARSER_CB_IS_DEFAULT,
 
     //http 报文组装失败
     HNW_HTTP_STRUCT_MESSAGE_FAIL,
+
+    //文件已经存在
+    HNW_HTTP_FILE_EXIST,
+
+    //报文已受理，但是还没有发送，链接未建立已经挂起
+    HNW_HTTP_SEND_PENDING,
+
+    //不支持range
+    HNW_HTTP_NOT_SUPPORT_RANGE,
+
+    //http 资源无效 或者不可访问
+    HNW_HTTP_RES_IS_INVALID,
+
+    //计时器超时
+    HNW_BASE_TIMER_TRIGGER,
 
     //未知错误
     HNW_BASE_NUKNOW_ERROR = -9999,
@@ -187,8 +230,12 @@ enum class HNW_CHANNEL_TYPE
 
     //SSL 客户端
     SSL_CLIENT,
+
     //SSL 服务端
     SSL_SERVER,
+
+    //定时器
+    TIMER,
 };
 
 //节点
@@ -196,6 +243,12 @@ struct NetPoint
 {
     std::string ip = "";
     int port = -1;
+    bool operator==(const NetPoint& r)
+    {
+        if (r.ip == ip && r.port == port)
+            return true;
+        return false;
+    }
 };
 
 #ifndef NET_INVALID_POINT 
@@ -231,12 +284,14 @@ enum class HNW_BASE_EVENT_TYPE
     //发送数据完整 complete
     HNW_BASE_SEND_COMPLETE,
 
-    //接收到 http 请求
+    //接收到 http 请求 头
+    HNW_HTTP_RECV_REQUEST_HEAD,
     HNW_HTTP_RECV_REQUEST,
-
+    
     //接收到 http 回复
+    HNW_HTTP_RECV_RESPONSE_HEAD,
     HNW_HTTP_RECV_RESPONSE,
-
+    
     //链接已经关闭
     HNW_BASE_CLOSED,
 };
@@ -307,7 +362,12 @@ typedef std::function<void(BLOG_LEVEL lv, const std::string& log_message)> HNW_L
 typedef std::function<std::shared_ptr<char>(size_t memory_size)> HNW_MAKE_SHARED_CB;
 
 //数据读取回调
-typedef std::function<size_t(std::shared_ptr<void> buff, size_t buff_size)> HNW_SEND_CB;
+typedef std::function<size_t(char* buff, size_t buff_size)> HNW_SEND_CB;
+
+typedef std::function<size_t(const char* buff,
+    size_t buff_size, std::uint64_t start_pos)> HNW_WRITE_CB;
+typedef std::function<size_t(char* buff,
+    size_t buff_size, std::uint64_t start_pos)> HNW_READ_CB;
 
 template<typename Ty, typename ...Args>
 static std::shared_ptr<Ty> make_shared_safe(Args&&...args)

@@ -5,7 +5,7 @@
 #ifndef HNW_HTTP_RESPONSE_PARSER_HPP_
 #define HNW_HTTP_RESPONSE_PARSER_HPP_
 #include "../hnw_http.h"
-#include "http_parser_define.hpp"
+#include "../struct/http_response_impl.hpp"
 namespace hnw
 {
 	namespace parser
@@ -15,9 +15,9 @@ namespace hnw
 		public:
 			HttpResponseParser(HNW_HANDLE handle):ParserBase(handle)
 			{
-				REG_CFUNC(START_LINE, HttpResponseParser::on_start_line);
-				REG_CFUNC(HEAD, HttpResponseParser::on_head);
-				REG_CFUNC(BODY, HttpResponseParser::on_body);
+				REG_CFUNC(util::START_LINE, HttpResponseParser::on_start_line);
+				REG_CFUNC(util::HEAD, HttpResponseParser::on_head);
+				REG_CFUNC(util::BODY, HttpResponseParser::on_body);
 
 				reset();
 			}
@@ -33,14 +33,14 @@ namespace hnw
 				auto ch = *(*start);
 				(*start)++;
 
-				if (CR == ch)
+				if (util::CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 				}
-				else if (LF == ch)
+				else if (util::LF == ch)
 				{
 					//空格分割
-					auto d = split(parser_cache1_, SPACE);
+					auto d = util::split(parser_cache1_, util::SPACE);
 
 					if (d.size() < 3)
 					{
@@ -49,12 +49,12 @@ namespace hnw
 					}
 					if (tmp_)
 					{
-						tmp_->version = d[0];
-						tmp_->status_code = d[1];
-						tmp_->reason = d[2];
+						tmp_->line->version(d[0]);
+						tmp_->line->status_code(d[1]);
+						tmp_->line->reason(d[2]);
 					}
 					parser_cache1_ = "";
-					parser_status_ = HEAD;
+					parser_status_ = util::HEAD;
 				}
 				else
 				{
@@ -67,46 +67,69 @@ namespace hnw
 			{
 				auto ch = *(*start);
 				(*start)++;
-				if (CR == ch)
+				if (util::CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 				}
-				else if (LF == ch)
+				else if (util::LF == ch)
 				{
 					if ("" == parser_cache1_)
 					{
 						//转到 body
-						auto p = tmp_->head.find(HTTP_LEN);
-						if (tmp_->head.end() == p)
+
+						//转到 body
+						EVENT_CB(HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE_HEAD, tmp_);
+
+						if (nullptr == tmp_->body||BODY_EMPTY == tmp_->body->body_type())
 						{
-							//结束
+							if (!tmp_->auto_create_body())
+							{
+								PRINTFLOG(BL_ERROR, "cannt create body");
+								EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL, "报文组装失败 body");
+								return HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL;
+							}
+						}
+
+						if (tmp_->body->is_complete())
+						{
 							return push();
 						}
-						else
-						{
-							//拿到大小
-							body_len_ = std::stoul(p->second);
-							parser_status_ = BODY;
-						}
+
+						parser_status_ = util::BODY;
+						return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+						//std::uint64_t p = (std::uint64_t)tmp_->head->get_head_int64(util::HTTP_LEN, 0);
+						//if (p == 0)
+						//{
+						//	//结束
+						//	return push();
+						//}
+						//else
+						//{
+						//	//拿到大小
+						//	body_len_ = p;
+						//	if (body_len_ == 0)
+						//		return push();
+						//	parser_status_ = util::BODY;
+						//}
 						//return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 					}
 					else
 					{
 						//空格分割
-						auto d = split(parser_cache1_, HEAD_SPLIT);
+						auto d = util::split(parser_cache1_, util::HEAD_SPLIT);
 
 						if (d.size() < 2)
 						{
-							PRINTFLOG(BL_ERROR, "bad start line:%s", parser_cache1_.c_str());
+							PRINTFLOG(BL_ERROR, "bad head key:%s", parser_cache1_.c_str());
 							return HNW_BASE_ERR_CODE::HNW_HTTP_PARSER_BAD_HEAD_KEY;
 						}
 						if (tmp_)
 						{
 							//tmp_->head[d[0]] = d[1];
-							tmp_->head.insert(std::make_pair(d[0], d[1]));
+							tmp_->head->add_head(d[0], d[1]);
 						}
 						parser_cache1_ = "";
-						parser_status_ = HEAD;
+						parser_status_ = util::HEAD;
 					}
 				}
 				else
@@ -124,68 +147,41 @@ namespace hnw
 					PRINTFLOG(BL_ERROR, "end>start");
 					return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
 				}
-				if (data_len >= body_len_)
+
+				auto write_size = tmp_->body->write_body((char*)(*start), data_len);
+				*start = *start + write_size;
+				//没有写完
+				if (tmp_->body->is_complete())
 				{
-					//
-					tmp_->body.append((char*)(*start), body_len_);
-					*start = *start + body_len_;
-					body_len_ = 0;
 					return push();
 				}
-				else
-				{
-					tmp_->body.append((char*)(*start), data_len);
-					*start = end;
-					body_len_ -= data_len;
-					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-				}
+				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+
+				//if ((std::uint64_t)data_len >= body_len_)
+				//{
+				//	//
+				//	tmp_->body->write_body((char*)(*start), (size_t)body_len_);
+				//	*start = *start + body_len_;
+				//	body_len_ = 0;
+				//	return push();
+				//}
+				//else
+				//{
+				//	tmp_->body->write_body((char*)(*start), data_len);
+				//	*start = end;
+				//	body_len_ -= data_len;
+				//	return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+				//}
 
 			}
 		public:
-			//组装原始数据包
-			static std::string struct_raw_package(std::shared_ptr<HnwHttpResponse> msg,
-				HNW_BASE_ERR_CODE& ret)
-			{
-				ret = HNW_BASE_ERR_CODE::HNW_BASE_OK;
-
-				if (msg)
-				{
-					std::string str = msg->version + SPACE + msg->status_code + SPACE + msg->reason + CRLF;
-
-					//新增body_len
-					auto p = msg->head.find(HTTP_LEN);
-					if (msg->head.end() == p)
-					{
-						msg->head.insert(std::make_pair(HTTP_LEN, std::to_string(msg->body.size())));
-					}
-
-					//新增body_len
-					p = msg->head.find(HTTP_CONN);
-					if (msg->head.end() == p)
-					{
-						msg->head.insert(std::make_pair(HTTP_CONN, "Close"));
-					}
-
-					for (auto h : msg->head)
-					{
-						str += h.first + HEAD_SPLIT + h.second + CRLF;
-					}
-
-					
-					str += CRLF;
-					str += msg->body;
-					return str;
-				}
-				ret = HNW_BASE_ERR_CODE::HNW_HTTP_BAD_MESSAGE;
-				return "";
-			}
-
+			
 			void reset()
 			{
 				//解析状态
-				parser_status_ = PSTATUS::START_LINE;
-				body_len_ = 0;
-				tmp_ = std::make_shared<HnwHttpResponse>();
+				parser_status_ = util::PSTATUS::START_LINE;
+				//body_len_ = 0;
+				tmp_ = http::ResponseImpl::generate();
 				//解析缓存
 				parser_cache1_.clear();
 				//parser_cache2_.clear();
@@ -205,8 +201,8 @@ namespace hnw
 			std::string parser_cache1_;
 			//std::string parser_cache2_;
 
-			size_t body_len_;
-			std::shared_ptr<HnwHttpResponse> tmp_;
+			std::uint64_t body_len_;
+			SPHnwHttpResponse tmp_;
 		};
 
 	}

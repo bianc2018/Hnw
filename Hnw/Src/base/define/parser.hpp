@@ -35,7 +35,10 @@ namespace hnw
 		class ParserBase 
 		{
 		public:
-			ParserBase(HNW_HANDLE handle):handle_(handle)
+			ParserBase(HNW_HANDLE handle):
+				handle_(handle),
+				make_shared_(hnw::default_make_shared),
+				log_cb_(hnw::default_log_print)
 			{
 				reg_parser_default_cb([this](unsigned char** start,
 					 unsigned char* const end) mutable{
@@ -65,7 +68,7 @@ namespace hnw
 							(int)ret,parser_status_);
 						return ret;
 					}
-					PRINTFLOG(BL_DEBUG, "%p-%p status %d", start, end, parser_status_);
+					//PRINTFLOG(BL_DEBUG, "%p-%p status %d", start, end, parser_status_);
 				}
 				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 			}

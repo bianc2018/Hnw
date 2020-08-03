@@ -35,9 +35,16 @@ void event_cb(std::int64_t handle, \
         printf("handle:%lld is recv a request %p\n", handle, event_data.get());
 
         auto request = PTR_CAST(HnwHttpRequest, event_data);
-        static std::string dir = "F:/backup";
-        
-        HnwHttp_FileResponse(handle, "200", dir + request->line->url());
+        HnwSetCookie cookie1;
+        cookie1.domain = "127.0.0.1";
+        cookie1.value.key = "k1";
+        cookie1.value.value = "v1";
+        cookie1.path = "/";
+        cookie1.expires = "-1";
+        SPHnwHttpResponse resp;
+        HnwHttp_GenerateResponse(handle, resp);
+        resp->head->set_setcookie(cookie1);
+        HnwHttp_Response(handle, resp);
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR == type)
     {
@@ -56,8 +63,8 @@ int main(int argc, char* argv[])
         context_.use_private_key_file("D:\\lib\\cert\\server-key.pem", boost::asio::ssl::context::pem);
         context_.use_tmp_dh_file("D:\\lib\\cert\\dh1024.pem");
     */
-  //  std::cout << "input host:";
-    
+    //  std::cout << "input host:";
+
     HttpParam param;
     param.host = "http://127.0.0.1:8081/";
     param.peer_type = Server;
@@ -65,9 +72,9 @@ int main(int argc, char* argv[])
     param.pri_key_file = "D:\\lib\\cert\\server-key.pem";
     param.temp_dh_file = "D:\\lib\\cert\\dh1024.pem";
     param.accept_num = 10;
-  //  std::cin >> param.host;
+    //  std::cin >> param.host;
 
-    //初始化通道
+      //初始化通道
     auto ret = HnwHttp_Start(param, event_cb, handle);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)
     {
@@ -78,7 +85,7 @@ int main(int argc, char* argv[])
         printf("HnwHttp_StartServer fail,ret =%d \n", ret);
         return (int)ret;
     }
-    
+
     system("pause");
 
     HnwHttp_Close(handle);

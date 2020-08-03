@@ -42,6 +42,15 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetMakeSharedCB(HNW_MAKE_SHARE
 //配置项
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int config_type, void* data, size_t data_len);
 
+//设置获取用户数据
+HNW_BASE_EXPORT_SYMBOLS void* HnwBase_GetUserData(HNW_HANDLE handle);
+
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetUserData(HNW_HANDLE handle, void* userdata);
+
+//新增一个定时器 close 关闭
+HNW_BASE_ERR_CODE HnwBase_AddTimer(size_t time_out_ms,
+    std::function<void()> call,
+    HNW_HANDLE& handle);
 //查询dns
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string &host,
     std::vector<NetPoint> &addr, const std::string& service="http");

@@ -6,6 +6,8 @@
 #include <string>
 #include <thread>
 #include <atomic>
+
+#include <boost/filesystem.hpp>
 //https://en.softonic.com/download-launch?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkb3dubG9hZFR5cGUiOiJpbnRlcm5hbERvd25sb2FkIiwiZG93bmxvYWRVcmwiOiJodHRwczovL2dzZi1mbC5zb2Z0b25pYy5jb20vYzRlLzc3ZS80ZWRhMDkzOTQwNDRkMjdhMTMyNGZjOTI4YmQ2M2Y4YmQzL2ZpbGU_RXhwaXJlcz0xNTkwODg0ODA4JlNpZ25hdHVyZT02ZjRhNzUwYmY0OTZjMzY3OGNhOGIyZDI0NjM5YmZkOTk3NTQ4OGY3JnVybD1odHRwczovL2RpcmVjdHgtcmVkaXN0cmlidXRhYmxlLmVuLnNvZnRvbmljLmNvbSZGaWxlbmFtZT1kaXJlY3R4X2p1bjIwMDdfcmVkaXN0LmV4ZSIsImFwcElkIjoiZGQyZGFkYmMtOTZkNC0xMWU2LTg2ZmQtMDAxNjNlZDgzM2U3IiwiaWF0IjoxNTkwODQ3OTM5LCJleHAiOjE1OTA4NTE1Mzl9.jJfTV6iKl0gXcElD2RRfW3__62fpV5022urX1tocxrw
 static std::string path = "/";
 
@@ -26,9 +28,10 @@ void event_cb(std::int64_t handle, \
     {
        /* printf("handle:%lld is connnect \n", handle);*/
 
-        auto request = std::make_shared<HnwHttpRequest>();
-        request->head.insert(std::make_pair("Connection", "Close"));
-        request->url = "/python/cpython/archive/v3.7.3.tar.gz";
+        SPHnwHttpRequest request ;
+        HnwHttp_GenerateRequest(handle, request);
+        request->head->add_head("Connection", "Close");
+        request->line->url("/win10_202004202345.gho");
        // request->body = std::string(1024*1024*20 , 'c');
         req_num = 0;
         time_ms = clock();
@@ -38,9 +41,9 @@ void event_cb(std::int64_t handle, \
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA == type)
     {
-        auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
-        printf("handle:%lld is recv data :%s \n", handle, std::string(data->buff
-            , data->buff_len).c_str());
+        //auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
+        //printf("handle:%lld is recv data :%s \n", handle, std::string(data->buff
+         //   , data->buff_len).c_str());
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
     {
@@ -57,6 +60,15 @@ void event_cb(std::int64_t handle, \
     {
         /*printf("handle:%lld is close\n", handle);*/
     }
+    else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE_HEAD == type)
+    {
+        //
+        std::string dst = "F:/backup/win10_202004202345.gho.bak";
+        boost::filesystem::remove(dst);
+        auto response = PTR_CAST(HnwHttpResponse, event_data);
+        printf("recv response head:\n%s\n", response->head->string().c_str());
+        HnwHttp_RecvFileResponse(response, dst);
+    }
     else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE == type)
     {
        /* printf("handle:%lld is recv a response %p\n", handle, event_data.get());*/
@@ -65,12 +77,11 @@ void event_cb(std::int64_t handle, \
         //printf("%s:%s\n", response->status_code.c_str(), response->body.c_str());
 
         //++req_num;
-        req_num += response->body.size();
+        req_num += response->body->body_size();
         auto data = req_num.load();
         auto t = (clock() - time_ms);
         printf("[%lld]commit all %lld byte,usd %d ms %f KB/s\n", con_num.load(),
             data, t, data / float(t));
-        printf("%s\n", response->body.c_str());
         HnwHttp_Close(handle);
         //HnwHttp_Start(param, event_cb, handle);
     }
@@ -91,7 +102,7 @@ void check_time()
     {
         auto data = req_num.load();
         auto t = (clock() - time_ms);
-        printf("commit all %lld byte,usd %lld ms %f KB/s\n", data, t, data/float(t));
+        printf("commit all %lld byte,usd %ld ms %f KB/s\n", data, t, data/float(t));
 
         //«Â¡„
         //req_num = 0;
@@ -110,7 +121,7 @@ int main(int argc, char* argv[])
 
     std::cout << "input home:";
     
-    param.host = "https://github.com/python/cpython/archive/v3.7.3.tar.gz";
+    param.host = "http://127.0.0.1:8081";
     param.peer_type = Client;
     //std::cin >> param.host;
 

@@ -61,6 +61,7 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetEvntCB(HNW_HANDLE handle, H
 
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetLogCB(HNW_LOG_CB cb)
 {
+    hnw::hnw_g_log_cb = cb;
     return  service.set_log_cb(cb);
 }
 
@@ -74,9 +75,24 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Config(HNW_HANDLE handle, int 
     return service.config(handle, config_type, data, data_len);
 }
 
+HNW_BASE_EXPORT_SYMBOLS void* HnwBase_GetUserData(HNW_HANDLE handle)
+{
+	return service.get_userdata(handle);
+}
+
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_SetUserData(HNW_HANDLE handle, void*userdata)
+{
+	return service.set_userdata(handle, userdata);
+}
+
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_BroadCast(std::string& ip)
 {
 	return service.broad_cast(ip);
+}
+
+HNW_BASE_ERR_CODE HnwBase_AddTimer(size_t time_out_ms, std::function<void()> call, HNW_HANDLE& handle)
+{
+    return service.add_timer(time_out_ms, call,handle);
 }
 
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string& host, std::vector<NetPoint>& addr, const std::string& service_d)

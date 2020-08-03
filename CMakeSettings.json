@@ -28,27 +28,27 @@
     },
     {
       "name": "x64-windows",
-      "generator": "Visual Studio 16 2019 Win64",
+      "generator": "Visual Studio 16 2019",
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows -DBUILD_HNW_EXAMPLE=ON",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x64" ],
+      "inheritEnvironments": [ "msvc_x86" ],
       "variables": [],
       "intelliSenseMode": "windows-msvc-x64"
     },
     {
       "name": "x64-windows-static",
-      "generator": "Visual Studio 16 2019 Win64",
+      "generator": "Visual Studio 16 2019",
       "configurationType": "Debug",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static -DBUILD_HNW_EXAMPLE=ON -DBUILD_HNW_STATIC=ON",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x64" ],
+      "inheritEnvironments": [ "msvc_x86" ],
       "variables": [],
       "intelliSenseMode": "windows-msvc-x64"
     }

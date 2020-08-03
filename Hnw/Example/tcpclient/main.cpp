@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
     //Á¬½Ó
     NetPoint dst; 
-    dst.ip = "fe80::9040:84d6:bd13:2b96%7";
+    dst.ip = "127.0.0.1";
     dst.port = 8081;
     ret = HnwBase_Connect(handle, dst);
     if (HNW_BASE_ERR_CODE::HNW_BASE_OK == ret)

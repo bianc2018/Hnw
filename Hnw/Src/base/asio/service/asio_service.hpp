@@ -14,6 +14,7 @@
 #include "../channel/ssl_client_channel.hpp"
 #include "../channel/ssl_server_channel.hpp"
 #endif
+#include "../channel/timer_channel.hpp"
 //#include "../channel/http_client_channel.hpp"
 //#include "../channel/http_server_channel.hpp"
 
@@ -31,13 +32,13 @@ namespace hnw
             AsioService() :service_(), work_(service_), \
                 run_flag_(true),thread_num_(get_default_thread_num())
             {
-                PRINTFLOG(BL_DEBUG, "BnsService init thread_num=%d", thread_num_);
+                //PRINTFLOG(BL_DEBUG, "BnsService init thread_num=%d", thread_num_);
                 for (int i = 0; i < thread_num_; ++i)
                 {
-                    PRINTFLOG(BL_DEBUG, "BnsService  run_worker %d", i);
+                    //PRINTFLOG(BL_DEBUG, "BnsService  run_worker %d", i);
                     thread_vec_.push_back(std::thread(&AsioService::run_worker, this));
                 }
-                PRINTFLOG(BL_DEBUG, "BnsService init ok");
+                //PRINTFLOG(BL_DEBUG, "BnsService init ok");
             }
 
             virtual ~AsioService()
@@ -157,19 +158,12 @@ namespace hnw
                         PRINTFLOG(BL_DEBUG, "new a SSLServerChannel handle[%I64d]", ch->get_handle());
                 }
 #endif
-               /* else if (HNW_CHANNEL_TYPE::HTTP_CLIENT == type)
+                else if (HNW_CHANNEL_TYPE::TIMER == type)
                 {
-                    ch = std::make_shared<HttpClientChannel>(service_);
+                    ch = make_shared_safe<ASIOTimerChannel>(service_);
                     if (ch)
-                        PRINTFLOG(BL_DEBUG, "new a HttpClientChannel handle[%I64d]", ch->get_handle());
+                        PRINTFLOG(BL_DEBUG, "new a UdpChannel handle[%I64d]", ch->get_handle());
                 }
-                else if (HNW_CHANNEL_TYPE::HTTP_SERVER == type)
-                {
-                    ch = std::make_shared<HttpServerChannel>(service_, \
-                        std::bind(&AsioService::add_channel_to_map, this, std::placeholders::_1));
-                    if (ch)
-                        PRINTFLOG(BL_DEBUG, "new a HttpServerChannel handle[%I64d]", ch->get_handle());
-                }*/
                 else
                 {
                     PRINTFLOG(BL_ERROR, "no support type=%d", type);

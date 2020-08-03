@@ -4,7 +4,7 @@
 #include <string>
 static FILE* file = nullptr;
 const char file_name[] = "C:\\Users\\hanquan lian\\Desktop\\env\\gcc\\gcc-debuginfo-8.2.0-1.el7.x86_64.rpm";
-size_t data_read(std::shared_ptr<void> buff, size_t buff_size)
+size_t data_read(char * buff, size_t buff_size)
 {
     if (!file)
     {
@@ -17,7 +17,7 @@ size_t data_read(std::shared_ptr<void> buff, size_t buff_size)
             return 0;
         }
     }
-    auto size = fread(buff.get(), sizeof(char),buff_size , file);
+    auto size = fread(buff, sizeof(char),buff_size , file);
     if (size == 0)
     {
         

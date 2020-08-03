@@ -34,8 +34,8 @@ static char PRINTFLOG_DST[PRINTF_BUFF_SIZE] = { 0 };
     file_name.c_str(), \
     __LINE__, PRINTFLOG_MESSAGE);\
 \
-    if (log_cb_)\
-        log_cb_(l,PRINTFLOG_DST);\
+    if (hnw_g_log_cb)\
+        hnw_g_log_cb(l,PRINTFLOG_DST);\
 }while(false)\
 
 #define MAKE_SHARED(x) make_shared_?make_shared_(x):nullptr
@@ -78,6 +78,13 @@ namespace hnw
     //接收线程数目
     const size_t default_accept_num = 5;
 
+   //连接超时 毫秒 10s
+    const size_t default_connect_time_out_ms = 0;
+    //接收超时 5min
+    const size_t default_recv_time_out_ms = 0;
+    //发送超时 10s
+    const size_t default_send_time_out_ms = 0;
+
     //默认的函数
     static std::shared_ptr<char> default_make_shared(size_t memory_size)
     {
@@ -101,7 +108,9 @@ namespace hnw
         auto str = g_log_tag[lv] + ":" + log_message;
         printf(str.c_str());
     }
-
+    //全局日志输出
+    static HNW_LOG_CB hnw_g_log_cb= default_log_print;
+    //static HNW_LOG_CB hnw_g_log_cb = nullptr;
     //句柄生成
     static HNW_HANDLE  g_handle = INVAILD_HANDLE;
     static std::mutex  g_handle_lock;
@@ -118,33 +127,5 @@ namespace hnw
     {
         return std::thread::hardware_concurrency() * 2 + 2;
     }
-
-    //基础类
-    //class HnwBaseObject
-    //{
-    //public:
-    //    //设置日志回调
-    //    virtual HNW_BASE_ERR_CODE set_log_cb(HNW_LOG_CB cb)
-    //    {
-    //        log_cb_ = cb;
-    //        return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-    //    }
-
-    //    //设置缓存回调
-    //    virtual HNW_BASE_ERR_CODE set_make_shared_cb(HNW_MAKE_SHARED_CB cb)
-    //    {
-    //        if (cb)
-    //        {
-    //            make_shared_ = cb;
-    //            return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-    //        }
-    //        PRINTFLOG(BL_ERROR, "make_shared_ dont set,make_shared_ is empty!");
-    //        return HNW_BASE_ERR_CODE::HNW_BASE_EMPYTY_MAKE_SHARED_CB;
-    //    }
-    //protected:
-    //    //回调函数
-    //    HNW_MAKE_SHARED_CB make_shared_;
-    //    HNW_LOG_CB log_cb_;
-    //};
 }
 #endif

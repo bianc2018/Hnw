@@ -30,10 +30,12 @@ elseif(UNIX)
 endif()
 
 #依赖 boost openss
-find_package(Boost 1.6.8 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 
+message("${Boost_LIBRARY_DIR}")
+message("${Boost_LIBRARIES}")
 #<LibaryName>_FOUND
 #<LibaryName>_INCLUDE_DIR or <LibaryName>_INCLUDES <LibaryName>_LIBRARY or <LibaryName>_LIBRARIES
 

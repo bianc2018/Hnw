@@ -1,7 +1,7 @@
 #ifndef HNW_ASIO_TCP_CLIENT_HPP_
 #define HNW_ASIO_TCP_CLIENT_HPP_
 
-#include "../../define/channel.hpp"
+#include "../service/asio_client_channel.hpp"
 
 #include <boost/asio.hpp>
 
@@ -11,12 +11,12 @@ namespace hnw
     {
         using namespace boost::asio;
         typedef boost::asio::io_service io_service;
-		class ASIOTcpClientChannel:public hnw::Channel
+		class ASIOTcpClientChannel:public ASIOClientChannel
 		{
 			
 		public:
 			ASIOTcpClientChannel(io_service &service)
-                :service_(service),socket_(service), bconn_(false)
+                :ASIOClientChannel(service),socket_(service)
 			{}
             virtual ~ASIOTcpClientChannel()
 			{
@@ -55,10 +55,14 @@ namespace hnw
                     return HNW_BASE_ERR_CODE::HNW_BASE_BIND_ADDRESS_FAIL;
                 }
                 
-
+                auto timer = add_timer(connect_time_out_ms_, [this]()
+                    {
+                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_CONNECT_TIME_OUT, "connect time out");
+                    });
                 auto self = shared_from_this();
-                auto con_handle = [this, self, remote](boost::system::error_code ec)
+                auto con_handle = [this, timer, self, remote](boost::system::error_code ec)
                 {
+                    del_timer(timer);
                     if (ec)
                     {
                         //减少打印
@@ -80,19 +84,6 @@ namespace hnw
                     get_handle(), remote.ip.c_str(), remote.port);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
-
-            //发送数据
-            virtual HNW_BASE_ERR_CODE send(std::shared_ptr<void> message, size_t message_size)
-            {
-                return async_send(message, message_size);
-            }
-
-            //发送数据
-            virtual HNW_BASE_ERR_CODE send(HNW_SEND_CB cb)
-            {
-               return async_send(nullptr,0,cb);
-            }
-
             //关闭一个通道
             virtual HNW_BASE_ERR_CODE close()
             {
@@ -127,172 +118,37 @@ namespace hnw
             }
 
             //is open
-            bool is_open()
+            virtual bool is_open()
             {
                 //套接字已打开
                 return socket_.is_open();
             }
-            bool before_accept()
-            {
-                //链接已建立
-                bconn_ = true;
-                return true;
-            }
-            bool after_accept()
-            {
-               
-                //bconn_ = true;
-                //EVENT_OK_CB(BNS_NET_EVENT_TYPE::BNS_CONNECT_ESTABLISH);
-                //接收数据
-                async_recv();
-                return true;
-            }
 
         protected:
-            //异步发送数据
-            HNW_BASE_ERR_CODE async_send(std::shared_ptr<void> buff, 
-                size_t buff_len, size_t beg = 0,HNW_CALL complete=nullptr)
+            
+            //直接写发送数据
+            virtual  HNW_BASE_ERR_CODE write(char* buff,
+                size_t buff_len,
+                AsioHandler handler
+            )
             {
-                if (buff_len == 0 || nullptr == buff)
-                {
-                    EVENT_SEND_CB(buff, buff_len);
-                    if (complete)
-                        complete();
-                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-                }
-
-                if (false == bconn_)
-                {
-                    EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN,"channel is not conn ,don't send");
-                    return HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN;
-                }
-                //写完数据后的回调函数
-                auto self = shared_from_this();
-                auto send_handler = \
-                    [this, self, buff_len, beg, buff,complete](boost::system::error_code ec, std::size_t s)
-                {
-
-                    if (ec)
-                    {
-                        PRINTFLOG(BL_DEBUG, "async_send error what()=%s", ec.message().c_str());
-                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_SEND_DATA_FAIL,"send data fail");
-                        //close();
-                        return;
-                    }
-                    //写完了
-                    if (buff_len <= s)
-                    {
-                        //返回异步写,取下一个buff
-                       // if (on_complate_)
-                        //    on_complate_(true);
-                        EVENT_SEND_CB(buff, buff_len);
-                        if (complete)
-                            complete();
-                        return;
-                    }
-                    //未写完
-                    //计算剩下的字节
-                    int now_len = buff_len - s;
-                    PRINTFLOG(BL_DEBUG, "async_send  %p:len[%d]", buff.get(), s);
-                    //继续写
-                    async_send(buff, now_len, beg + s, complete);
-                    return;
-                };
-
-                socket_.async_write_some(boost::asio::buffer((char*)buff.get() + beg, buff_len), \
-                    send_handler);
+                socket_.async_write_some(boost::asio::buffer((char*)buff, buff_len), \
+                    handler);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
 
-            //异步发送数据
-            HNW_BASE_ERR_CODE async_send(std::shared_ptr<void> buff, size_t buff_len,
-                HNW_SEND_CB cb)
+            //直接读取接收数据
+            virtual  HNW_BASE_ERR_CODE read(char* buff,
+                size_t buff_len,
+                AsioHandler handler
+            )
             {
-                if (false == bconn_)
-                {
-                    EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN, "channel is not conn ,don't send");
-                    return HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN;
-                }
-
-                //申请缓存
-                if (nullptr == buff || buff_len != send_buff_size_)
-                {
-                    buff_len = send_buff_size_;
-                    buff = MAKE_SHARED(send_buff_size_);
-                    if (nullptr == buff)
-                    {
-                        PRINTFLOG(BL_ERROR, "get cache error ch :%I64d", handle_);
-                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL, "not alloc data");
-                        //close();
-                        return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
-                    }
-                }
-                
-                //读取数据
-                size_t read_data_size = 0;
-                if (cb)
-                    read_data_size = cb(buff, buff_len);
-
-                //完毕
-                if (0 == read_data_size)
-                    return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-
-                //发送
-                return async_send(buff, read_data_size,0,[this,buff, buff_len,cb]()mutable
-                    {
-                        //继续发送
-                        async_send(buff, buff_len, cb);
-                    });
-            }
-            //异步接收数据
-            HNW_BASE_ERR_CODE async_recv(std::shared_ptr<void> buff = nullptr, size_t buff_len = 0)
-            {
-                if (false == bconn_)
-                {
-                    PRINTFLOG(BL_ERROR, "TcpClientChannel[%I64d] is not connected ", handle_);
-                    EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN,"channel no connect ,dont recv data");
-                    return HNW_BASE_ERR_CODE::HNW_BASE_CHANNEL_NOT_CONN;
-                }
-
-                if (nullptr == buff||buff_len!=recv_buff_size_)
-                {
-                    buff_len = recv_buff_size_;
-                    buff = MAKE_SHARED(recv_buff_size_);
-                    if (nullptr == buff)
-                    {
-                        PRINTFLOG(BL_ERROR, "get cache error ch :%I64d", handle_);
-                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL,"not alloc data");
-                        //close();
-                        return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
-                    }
-                }
-                auto self = shared_from_this();
-                auto recv_handler = [this, self, buff, buff_len]\
-                    (boost::system::error_code ec, size_t recv_len)
-                {
-                    if (ec)
-                    {
-                        //
-                        PRINTFLOG(BL_DEBUG, "async_read error what()=%s", ec.message().c_str());
-                        EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_RECV_DATA_FAIL,"cannt recv data");
-                        //close();
-                        return;
-                    }
-                    PRINTFLOG(BL_DEBUG, "async_read  %p:len[%d]", buff.get(), recv_len);
-                    EVENT_RECV_CB(buff, recv_len);
-                    //重复接收数据
-                    async_recv(buff, buff_len);
-                };
-                socket_.async_read_some(boost::asio::buffer(buff.get(), buff_len), recv_handler);
+                //异步读数据
+                socket_.async_read_some(boost::asio::buffer(buff, buff_len), handler);
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
         private:
-            //是否链接？
-            std::atomic_bool bconn_;
-
             ip::tcp::socket socket_;
-
-            io_service& service_;
 		};
     }
 }

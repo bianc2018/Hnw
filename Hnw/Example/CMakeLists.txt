@@ -32,6 +32,23 @@ target_link_libraries(HnwHttpClient  HnwHttp ${DEFAULT_LIB})
 add_executable(HnwHttpServer "httpserver/main.cpp")
 target_link_libraries(HnwHttpServer  HnwHttp ${DEFAULT_LIB})
 
+add_executable(HnwHttpGetResourceStatus "HttpResourceStatus/HttpResourceStatus.cpp")
+target_link_libraries(HnwHttpGetResourceStatus  HnwHttp ${DEFAULT_LIB})
+
+add_executable(HnwHttpDownload "HttpDownload/HttpDownload.cpp")
+target_link_libraries(HnwHttpDownload  HnwHttp ${DEFAULT_LIB})
+
+add_executable(HnwHttpCookie "HttpCookie/HttpCookie.cpp")
+target_link_libraries(HnwHttpCookie  HnwHttp ${DEFAULT_LIB})
+
+add_executable(HnwFileMap "filemap/filemap.cpp")
+target_link_libraries(HnwFileMap  Boost::filesystem)
+
+add_executable(HnwTest "test/test.cpp")
+target_link_libraries(HnwTest  )
+
+add_executable(HnwFileShared "FileService/main.cpp" "FileService/service.h" "FileService/service.cpp")
+target_link_libraries(HnwFileShared  HnwHttp Boost::filesystem Boost::program_options ${DEFAULT_LIB})
 #include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/Boost.cmake)
 #include(${PROJECT_SOURCE_DIR}/Hnw/Cmake/OpenSSL.cmake)
 #√ª”–‘Ú ß∞‹

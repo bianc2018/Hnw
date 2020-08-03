@@ -5,7 +5,7 @@
 #ifndef HNW_HTTP_REQUEST_PARSER_HPP_
 #define HNW_HTTP_REQUEST_PARSER_HPP_
 #include "../hnw_http.h"
-#include "http_parser_define.hpp"
+#include "../struct/http_request_impl.hpp"
 namespace hnw
 {
     namespace parser
@@ -16,9 +16,9 @@ namespace hnw
         public:
             HttpRequestParser(HNW_HANDLE handle):ParserBase(handle)
             {
-                REG_CFUNC(START_LINE, HttpRequestParser::on_start_line);
-                REG_CFUNC(HEAD, HttpRequestParser::on_head);
-                REG_CFUNC(BODY, HttpRequestParser::on_body);
+                REG_CFUNC(util::START_LINE, HttpRequestParser::on_start_line);
+                REG_CFUNC(util::HEAD, HttpRequestParser::on_head);
+                REG_CFUNC(util::BODY, HttpRequestParser::on_body);
 
                 reset();
 
@@ -35,14 +35,14 @@ namespace hnw
 				auto ch = *(*start);
 				(*start)++;
 				PRINTFLOG(BL_DEBUG, "%c", ch);
-				if (CR == ch)
+				if (util::CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 				}
-				else if (LF == ch)
+				else if (util::LF == ch)
 				{
 					//空格分割
-					auto d = split(parser_cache1_, SPACE);
+					auto d = util::split(parser_cache1_, util::SPACE);
 
 					if (d.size() < 3)
 					{
@@ -51,12 +51,12 @@ namespace hnw
 					}
 					if (tmp_)
 					{
-						tmp_->method = d[0];
-						tmp_->url = d[1];
-						tmp_->version = d[2];
+						tmp_->line->method(d[0]);
+						tmp_->line->url(d[1]);
+						tmp_->line->version(d[2]);
 					}
 					parser_cache1_ = "";
-					parser_status_ = HEAD;
+					parser_status_ = util::HEAD;
 				}
 				else
 				{
@@ -70,36 +70,58 @@ namespace hnw
 				auto ch = *(*start);
 				(*start)++;
 
-				PRINTFLOG(BL_DEBUG, "%c", ch);
-				if (CR == ch)
+				//PRINTFLOG(BL_DEBUG, "%c", ch);
+				if (util::CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 				}
-				else if (LF == ch)
+				else if (util::LF == ch)
 				{
+
 					if ("" == parser_cache1_)
 					{
 						//转到 body
-						auto p = tmp_->head.find(HTTP_LEN);
-						if (tmp_->head.end() == p)
+						EVENT_CB(HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_REQUEST_HEAD, tmp_);
+
+						if (nullptr == tmp_->body
+							|| HTTP_BODY_TYPE::BODY_EMPTY ==tmp_->body->body_type())
 						{
-							//结束
+							if (!tmp_->auto_create_body())
+							{
+								PRINTFLOG(BL_ERROR, "cannt create body");
+								EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL, "报文组装失败 body");
+								return HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL;
+							}
+						}
+
+						if (tmp_->body->is_complete())
+						{
 							return push();
 						}
-						else
-						{
-							//拿到大小
-							body_len_ = std::stoul(p->second);
-							if(body_len_ == 0)
-								return push();
-							parser_status_ = BODY;
-						}
+
+						parser_status_ = util::BODY;
+						return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+
+						//size_t p = (size_t)tmp_->head->get_head_int64(util::HTTP_LEN,0);
+						//if (p<=0)
+						//{
+						//	//结束
+						//	return push();
+						//}
+						//else
+						//{
+						//	//拿到大小
+						//	body_len_ = p;
+						//	if(body_len_ == 0)
+						//		return push();
+						//	parser_status_ = util::BODY;
+						//}
 						//return HNW_BASE_ERR_CODE::HNW_BASE_OK;
 					}
 					else
 					{
 						//空格分割
-						auto d = split(parser_cache1_, HEAD_SPLIT);
+						auto d = util::split(parser_cache1_, util::HEAD_SPLIT);
 
 						if (d.size() < 2)
 						{
@@ -109,10 +131,10 @@ namespace hnw
 						if (tmp_)
 						{
 							//tmp_->head[d[0]] = d[1];
-							tmp_->head.insert(std::make_pair(d[0], d[1]));
+							tmp_->head->add_head(d[0], d[1]);
 						}
 						parser_cache1_ = "";
-						parser_status_ = HEAD;
+						parser_status_ = util::HEAD;
 					}
 				}
 				else
@@ -130,71 +152,41 @@ namespace hnw
 					PRINTFLOG(BL_ERROR, "end>start");
 					return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
 				}
-				if (data_len >= body_len_)
+
+				auto write_size = tmp_->body->write_body((char*)(*start), data_len);
+				*start = *start + write_size;
+				//没有写完
+				if (tmp_->body->is_complete())
 				{
-					//
-					tmp_->body.append((char*)(*start), body_len_);
-					*start = *start+ body_len_;
-					body_len_ = 0;
 					return push();
 				}
-				else
-				{
-					tmp_->body.append((char*)(*start), data_len);
-					*start = end;
-					body_len_ -= data_len;
-					return HNW_BASE_ERR_CODE::HNW_BASE_OK;
-				}
+				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+
+				//if ((size_t)data_len >= body_len_)
+				//{
+				//	//
+				//	tmp_->body->write_body((char*)(*start), (size_t)body_len_);
+				//	*start = *start+ body_len_;
+				//	body_len_ = 0;
+				//	return push();
+				//}
+				//else
+				//{
+				//	tmp_->body->write_body((char*)(*start), data_len);
+				//	*start = end;
+				//	body_len_ -= data_len;
+				//	return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+				//}
 				
 			}
          
 	   public:
-		   //组装原始数据包
-		   static std::string struct_raw_package(std::shared_ptr<HnwHttpRequest> msg,
-			   HNW_BASE_ERR_CODE& ret)
-		   {
-			   ret = HNW_BASE_ERR_CODE::HNW_BASE_OK;
-
-			   if (msg)
-			   {
-				   //新增body_len
-				   auto p = msg->head.find(HTTP_LEN);
-				   if (msg->head.end() == p)
-				   {
-					   msg->head.insert(std::make_pair(HTTP_LEN, std::to_string(msg->body.size())));
-				   }
-
-				   //新增body_len
-				   p = msg->head.find(HTTP_CONN);
-				   if (msg->head.end() == p)
-				   {
-					   msg->head.insert(std::make_pair(HTTP_CONN, "Close"));
-				   }
-
-				   std::string str = msg->method + SPACE + msg->url + SPACE + msg->version + CRLF;
-
-				   for (auto h : msg->head)
-				   {
-					   str += h.first + HEAD_SPLIT + h.second + CRLF;
-				   }
-
-				   str += CRLF;
-				   str += msg->body;
-
-				//   printf("http response:\n%s\n", str.c_str());
-
-				   return str;
-			   }
-			   ret = HNW_BASE_ERR_CODE::HNW_HTTP_BAD_MESSAGE;
-			   return "";
-		   }
 
 		   void reset()
 		   {
 			   //解析状态
-			   parser_status_ = PSTATUS::START_LINE;
-			   body_len_ = 0;
-			   tmp_ = std::make_shared<HnwHttpRequest>();
+			   parser_status_ = util::PSTATUS::START_LINE;
+			   tmp_ = std::make_shared<http::RequestImpl>();
 			   //解析缓存
 			   parser_cache1_.clear();
 			   //parser_cache2_.clear();
@@ -212,8 +204,7 @@ namespace hnw
 		private:
 			//解析缓存
 			std::string parser_cache1_;
-			size_t body_len_;
-            std::shared_ptr<HnwHttpRequest> tmp_;
+            std::shared_ptr<http::RequestImpl> tmp_;
         };
 
     }

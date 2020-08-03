@@ -39,12 +39,7 @@ namespace hnw
             {
                 //创建客户端
                 auto cli = std::make_shared<ASIOSSLClientChannel>(service_,ctx_);
-                cli->init(NET_INVALID_POINT);
-                cli->set_shared_cb(make_shared_);
-                cli->set_log_cb(log_cb_);
-                cli->set_event_cb(event_cb_);
-                cli->config(SET_RECV_BUFF_SIZE, (void*)&recv_buff_size_, sizeof(recv_buff_size_));
-                cli->config(SET_SEND_BUFF_SIZE, (void*)&send_buff_size_, sizeof(send_buff_size_));
+                cli->init_accept(shared_from_this(), NET_INVALID_POINT);
                 return cli;
             }
 
