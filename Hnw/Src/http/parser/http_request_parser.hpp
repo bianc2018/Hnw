@@ -34,7 +34,7 @@ namespace hnw
 			{
 				auto ch = *(*start);
 				(*start)++;
-				PRINTFLOG(BL_DEBUG, "%c", ch);
+				//PRINTFLOG(BL_DEBUG, "%c", ch);
 				if (util::CR == ch)
 				{
 					return HNW_BASE_ERR_CODE::HNW_BASE_OK;

@@ -90,6 +90,11 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_BroadCast(std::string& ip)
 	return service.broad_cast(ip);
 }
 
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Async(std::function<void()> call)
+{
+    return service.async(call);
+}
+
 HNW_BASE_ERR_CODE HnwBase_AddTimer(size_t time_out_ms, std::function<void()> call, HNW_HANDLE& handle)
 {
     return service.add_timer(time_out_ms, call,handle);

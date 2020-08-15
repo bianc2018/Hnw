@@ -196,7 +196,9 @@ enum class HNW_BASE_ERR_CODE
 
     //文件已经存在
     HNW_HTTP_FILE_EXIST,
-
+    
+    //请求的资源不存在
+    HNW_HTTP_RES_NO_EXIST,
     //报文已受理，但是还没有发送，链接未建立已经挂起
     HNW_HTTP_SEND_PENDING,
 

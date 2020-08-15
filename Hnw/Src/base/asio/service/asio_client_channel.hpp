@@ -131,7 +131,7 @@ namespace hnw
                         //返回异步写,取下一个buff
                        // if (on_complate_)
                         //    on_complate_(true);
-                        EVENT_SEND_CB(buff, buff_len);
+                       // EVENT_SEND_CB(buff, buff_len);
                         if (complete)
                             complete();
                         return;

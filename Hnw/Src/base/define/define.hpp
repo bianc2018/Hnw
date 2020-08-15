@@ -45,6 +45,20 @@ static char PRINTFLOG_DST[PRINTF_BUFF_SIZE] = { 0 };
 if (event_cb_)\
     event_cb_((std::int64_t)get_handle(),(int)opt,data)
 
+//Òì²½»Øµ÷
+#define EVENT_CB_ASYNC(opt,data) \
+do\
+{\
+    auto handle = get_handle();\
+    auto cb = event_cb_;\
+    auto self = shared_from_this();\
+    HnwBase_Async([handle,cb,self]()\
+    {\
+        if (cb)\
+            cb((std::int64_t)handle, (int)opt, data); \
+    });\
+}while(false)\
+
 #define EVENT_RECV_CB(buff,len) \
 EVENT_CB(HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA,std::make_shared<HnwBaseRecvDataEvent>((char*)(buff.get()), len))
 

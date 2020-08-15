@@ -25,12 +25,12 @@ namespace hnw
         };
         typedef std::shared_ptr<DownloadTask> SharedDownloadTask;
 		//引用
-		class Service:public parser::ParserBase
-		{
-		public:
+        class Service :public parser::ParserBase
+        {
+        public:
             Service() :parser::ParserBase(INVAILD_HANDLE)
             {}
-			~Service()
+            ~Service()
             {}
 
             HNW_BASE_ERR_CODE start(const HttpParam& param, HNW_EVENT_CB cb, HNW_HANDLE& handle)
@@ -38,8 +38,8 @@ namespace hnw
                 util::UrlParam url_param;
                 util::parser_url(param.host, url_param);
                 HNW_CHANNEL_TYPE chn_type = HNW_CHANNEL_TYPE::TCP_SERVER;
-               
-                auto ret = get_base_channel_type(url_param.protocol,param.peer_type, chn_type);
+
+                auto ret = get_base_channel_type(url_param.protocol, param.peer_type, chn_type);
                 if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
                     return ret;
 
@@ -58,18 +58,14 @@ namespace hnw
                 }
 
                 //创建会话
-                SP sp = make_shared_safe<Session>(handle, param.peer_type==Client?Client:None);
-
-                auto event_wrap = bind_sp(sp, cb);
-
+                auto sp = add_session(handle, param.peer_type == Client ? Client : None, bind_sp(cb));
+                if (nullptr == sp)
+                {
+                    PRINTFLOG(BL_ERROR, "cannt create session handle =%llu",handle);
+                    HnwBase_Close(handle);
+                    return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
+                }
                 sp->add_session_head(util::HTTP_HOST, url_param.host);
-                sp->set_log_cb(log_cb_);
-                sp->set_event_cb(event_wrap);
-                sp->set_make_shared_cb(make_shared_);
-                sp->init();
-                HnwBase_SetEvntCB(handle, event_wrap);
-                HnwBase_SetUserData(handle, sp.get());
-
                 //设置证书
                 /*
                 HnwBase_Config(handle,SET_SSL_SERVER_CERT_FILE_PATH,
@@ -193,10 +189,10 @@ namespace hnw
                 //合并
                 req->head->merge(ext_head);
 
-               /* if (0 == req->head->get_head_count(util::HTTP_CT))
-                {
-                    req->head->add_head(util::HTTP_CT, util::get_http_mime_by_uri(filepath));
-                }*/
+                /* if (0 == req->head->get_head_count(util::HTTP_CT))
+                 {
+                     req->head->add_head(util::HTTP_CT, util::get_http_mime_by_uri(filepath));
+                 }*/
                 HttpRange range;
                 req->head->get_range(range);
                 req->body = http::FileBodyImpl::generate(filepath, range);
@@ -302,7 +298,7 @@ namespace hnw
                     range.total = size;
                 }
 
-                response->body = http::FileBodyImpl::generate(filepath, range,flag);
+                response->body = http::FileBodyImpl::generate(filepath, range, flag);
                 if (nullptr == response->body)
                 {
                     PRINTFLOG(BL_ERROR, " http::FileBodyImpl::generate bad %s", filepath.c_str());
@@ -312,19 +308,19 @@ namespace hnw
             }
 
             //获取对应的会话指针
-            http::Session* get_session(HNW_HANDLE handle)
+            /*http::Session* get_session(HNW_HANDLE handle)
             {
                 return (http::Session*)HnwBase_GetUserData(handle);
-            }
+            }*/
 
             HNW_BASE_ERR_CODE download(const std::string& url,
                 const std::string& output,
                 HTTP_DOWNLOAD_CB cb,
                 size_t con_num,
                 const HttpRange range
-                , int file_flag )
+                , int file_flag)
             {
-                if (con_num == 0 || url == ""|| output=="")
+                if (con_num == 0 || url == "" || output == "")
                 {
                     return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
                 }
@@ -340,19 +336,19 @@ namespace hnw
                 task->total.end = range.end;
                 task->url = url;
 
-                return download(task,true);
+                return download(task, true);
             }
 
-            HNW_BASE_ERR_CODE download(SharedDownloadTask task,bool bMainTask=false)
+            HNW_BASE_ERR_CODE download(SharedDownloadTask task, bool bMainTask = false)
             {
                 if (nullptr == task)
                 {
                     PRINTFLOG(BL_ERROR, "task is nullptr");
                 }
 
-                if (true == bMainTask||task->total.total ==0)
+                if (true == bMainTask || task->total.total == 0)
                 {
-                    HTTP_RES_STATUS_CB cb = [task,this](HttpResourceStatus status,
+                    HTTP_RES_STATUS_CB cb = [task, this](HttpResourceStatus status,
                         HNW_BASE_ERR_CODE error)
                     {
                         if (HNW_BASE_ERR_CODE::HNW_BASE_OK != error)
@@ -378,7 +374,7 @@ namespace hnw
                                 task->fflag = HTTP_FILE_FLAG_OPEN;
                                 download(task);
                             }
-                            else if (status.status == util::HTTP_STATUS_MOVE_P||
+                            else if (status.status == util::HTTP_STATUS_MOVE_P ||
                                 status.status == util::HTTP_STATUS_MOVE_T)
                             {
                                 //redirect
@@ -441,7 +437,7 @@ namespace hnw
                                 subtask->fflag = HTTP_FILE_FLAG_OPEN;
                                 subtask->output = task->output;
                                 subtask->total.use_start_endpoint = false;
-                               // subtask->total.use_end_endpoint = false;
+                                // subtask->total.use_end_endpoint = false;
                                 subtask->total.total = task->total.total;
                                 subtask->total.start = start;
                                 subtask->total.use_end_endpoint = true;
@@ -481,7 +477,7 @@ namespace hnw
                     return start(param, event_cb, handle);
                 }
             }
-            
+
             //获取资源状态
             HNW_BASE_ERR_CODE get_resource_status(const std::string& url,
                 HTTP_RES_STATUS_CB cb)
@@ -504,13 +500,13 @@ namespace hnw
                 param.peer_type = Client;
 
                 HNW_HANDLE handle = HNW_INVALID_HANDLE;
-                HNW_EVENT_CB event_cb=std::bind(&Service::resource_status_cb,
-                    this, status,cb,
+                HNW_EVENT_CB event_cb = std::bind(&Service::resource_status_cb,
+                    this, status, cb,
                     std::placeholders::_1,
                     std::placeholders::_2,
                     std::placeholders::_3);
 
-                return start(param, event_cb,handle);
+                return start(param, event_cb, handle);
             }
 
             HNW_BASE_ERR_CODE request_get(
@@ -541,15 +537,15 @@ namespace hnw
                     std::placeholders::_2,
                     std::placeholders::_3);
 
-                auto ret =  start(param, event_cb, handle);
+                auto ret = start(param, event_cb, handle);
                 if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
                     return ret;
 
                 //HnwBase_Config
             }
-		private:
+        private:
             //根据输入的协议类型选择基层通道类型
-            HNW_BASE_ERR_CODE get_base_channel_type(std::string protocol,PeerType peer_type,
+            HNW_BASE_ERR_CODE get_base_channel_type(std::string protocol, PeerType peer_type,
                 HNW_CHANNEL_TYPE& chn_type)
             {
                 //默认 http
@@ -584,7 +580,7 @@ namespace hnw
             {
                 //dns
                 std::vector<NetPoint> point_ver;
-                auto ret = HnwBase_QueryDNS(url_param.host, point_ver, url_param.protocol.empty()?"http": url_param.protocol);
+                auto ret = HnwBase_QueryDNS(url_param.host, point_ver, url_param.protocol.empty() ? "http" : url_param.protocol);
                 if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
                 {
                     return NET_INVALID_POINT;
@@ -611,33 +607,42 @@ namespace hnw
                 return point;
             }
 
-            HNW_EVENT_CB bind_sp(SP sp, HNW_EVENT_CB cb)
+            HNW_EVENT_CB bind_sp(HNW_EVENT_CB cb)
             {
-                return std::bind(&Service::event_cb, this, sp, cb,
+                return std::bind(&Service::event_cb, this, cb,
                     std::placeholders::_1, std::placeholders::_2
                     , std::placeholders::_3);
             }
-			
-            void event_cb(SP sp, HNW_EVENT_CB cb,std::int64_t handle, int tt, std::shared_ptr<void> event_data)
-			{
+
+            void event_cb(HNW_EVENT_CB cb, std::int64_t handle, int tt, std::shared_ptr<void> event_data)
+            {
                 HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)tt;
 
+                auto sp = get_session(handle);
+                if (nullptr == sp)
+                {
+                    PRINTFLOG(BL_ERROR, "handle %llu session is no exist", handle);
+                    HnwBase_Close(handle);//关闭
+                    del_session(handle);//空的也关闭
+                    return;
+                }
                 if (HNW_BASE_EVENT_TYPE::HNW_BASE_RECV_DATA == type)
                 {
                     auto data = PTR_CAST(HnwBaseRecvDataEvent, event_data);
-                    sp->recv_data((char*)data->buff,data->buff_len);
+                    sp->recv_data((char*)data->buff, data->buff_len);
                 }
                 else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ACCEPT == type)
                 {
                     auto data = PTR_CAST(HnwBaseAcceptEvent, event_data);
                     //创建一个客户端会话
-                    auto clinet = sp->generate(data->client, Server);
-                    auto event_wrap = bind_sp(clinet, cb);
-                    clinet->set_event_cb(event_wrap);
-                    clinet->init();
-                    clinet->on_connect_establish();
-                    HnwBase_SetEvntCB(data->client, event_wrap);
-                    HnwBase_SetUserData(data->client, clinet.get());
+                    auto clinet = add_session(data->client, Server,bind_sp(cb));
+                    if(clinet)
+                        clinet->on_connect_establish();
+                    else
+                    {
+                        PRINTFLOG(BL_ERROR, "add_session bad!");
+                        HnwBase_Close(handle);
+                    }
                 }
                 else if (HNW_BASE_EVENT_TYPE::HNW_BASE_CONNECT_ESTABLISH == type)
                 {
@@ -645,12 +650,14 @@ namespace hnw
                 }
                 else if (HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED == type)
                 {
+                    //HnwBase_SetEvntCB(handle,nullptr);
                     sp->on_disconnect();
+                    del_session(handle);
                 }
                 //其他不管
-                if(cb)
+                if (cb)
                     cb(handle, tt, event_data);
-			}
+            }
 
             //状态更改
             bool on_download_status_change(std::int64_t handle,
@@ -661,16 +668,16 @@ namespace hnw
                     if (task->cb)
                     {
                         std::uint64_t pos = 0;
-                        if (task->response&&task->response->body)
+                        if (task->response && task->response->body)
                         {
                             pos = task->response->body->write_pos();
                         }
                         auto ret = task->cb(task->url, task->output,
                             task->total, pos,
                             task->error);
-                       
+
                         //错误或者下载完毕 可以不用再次回调了
-                        if (!ret||HNW_BASE_ERR_CODE::HNW_BASE_OK != task->error||task->total.section_size() == pos)
+                        if (!ret || HNW_BASE_ERR_CODE::HNW_BASE_OK != task->error || task->total.section_size() == pos)
                         {
                             if (handle != HNW_INVALID_HANDLE)
                             {
@@ -679,13 +686,13 @@ namespace hnw
                             }
                             return false;
                         }
-                            
+
                         return true;
                     }
                 }
                 return false;
             }
-            
+
             //下载回调 
             void download_cb(SharedDownloadTask task,
                 std::int64_t handle, int tt, std::shared_ptr<void> event_data)
@@ -744,11 +751,11 @@ namespace hnw
                     task->error = (HNW_BASE_ERR_CODE)error->code;
                     on_download_status_change(handle, task);
                 }
-               /* else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
-                {
-                    auto sendevent = PTR_CAST(HnwBaseSendDataEvent, event_data);
-                    printf("download send \n%s\n",std::string(sendevent->buff,sendevent->buff_len).c_str());
-                }*/
+                /* else if (HNW_BASE_EVENT_TYPE::HNW_BASE_SEND_COMPLETE == type)
+                 {
+                     auto sendevent = PTR_CAST(HnwBaseSendDataEvent, event_data);
+                     printf("download send \n%s\n",std::string(sendevent->buff,sendevent->buff_len).c_str());
+                 }*/
                 on_download_status_change(handle, task);
             }
 
@@ -764,7 +771,7 @@ namespace hnw
                     SPHnwHttpHead head;
                     HnwHttp_GenerateHead(handle, head);
                     head->set_range(range);
-                   // head->add_head(util::HTTP_HOST, "zhuanlan.zhihu.com");
+                    // head->add_head(util::HTTP_HOST, "zhuanlan.zhihu.com");
                     auto ret = HnwHttp_RawRequest(handle, util::HTTP_METHOD_HEAD, status.path, "", head);
                     if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
                     {
@@ -790,7 +797,7 @@ namespace hnw
                         response->head->get_content_range(range);
                         status.size = range.total;
                         status.partial_support = true;
-                        
+
                     }
                     else if (response->line->status_code() == util::HTTP_STATUS_MOVE_P
                         || response->line->status_code() == util::HTTP_STATUS_MOVE_T)
@@ -826,7 +833,45 @@ namespace hnw
             {
 
             }
-		};
+
+        public:
+            //获取会话指针
+            SP get_session(HNW_HANDLE handle) 
+            {
+                std::lock_guard<std::mutex> lk(session_map_lock_);
+                auto p = session_map_.find(handle);
+                if (session_map_.end() != p)
+                {
+                    return p->second;
+                }
+                return nullptr;
+            }
+        private:
+            //新增
+            SP add_session(HNW_HANDLE handle, PeerType type, HNW_EVENT_CB cb)
+            {
+                auto sp = Session::generate(handle, type, cb);
+                if (sp)
+                {
+                    std::lock_guard<std::mutex> lk(session_map_lock_);
+                    session_map_[handle] = sp;//已有的覆盖
+                }
+                return sp;
+            }
+            //删除
+            bool del_session(HNW_HANDLE handle)
+            {
+                std::lock_guard<std::mutex> lk(session_map_lock_);
+                session_map_.erase(handle);//已有的覆盖
+                return true;
+            }
+
+        private:
+            //锁
+            std::mutex session_map_lock_;
+            //map
+            std::map<HNW_HANDLE, SP> session_map_;
+        };
 
 	}
 }

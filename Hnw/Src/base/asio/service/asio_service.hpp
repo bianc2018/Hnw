@@ -240,6 +240,13 @@ namespace hnw
                 }
                 return HNW_BASE_ERR_CODE::HNW_BASE_OK;
             }
+
+            //异步任务执行
+            virtual HNW_BASE_ERR_CODE async(std::function<void()> call)
+            {
+                service_.post(call);
+                return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+            }
         private:
             //运行期
             void run_worker()

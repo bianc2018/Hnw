@@ -16,7 +16,7 @@ message(STATUS "BUILD_HNW_STATIC OFF ,build shared HnwHttp")
 endif()
 
 SET_TARGET_PROPERTIES(HnwHttp PROPERTIES VERSION ${HNW_VERSION})
-target_link_libraries(HnwHttp  HnwBase Boost::filesystem ${DEFAULT_LIB} )
+target_link_libraries(HnwHttp  HnwBase Boost::filesystem Boost::locale ${DEFAULT_LIB} )
 
 install(TARGETS HnwHttp 
 	RUNTIME DESTINATION bin

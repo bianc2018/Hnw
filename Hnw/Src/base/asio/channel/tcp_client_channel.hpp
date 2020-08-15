@@ -89,11 +89,27 @@ namespace hnw
             {
                 if (bconn_)
                 {
+                    bconn_ = false;
+                   // EVENT_OK(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED);
+                    //EVENT_CB_ASYNC(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED,nullptr);
+                    {
+                        auto handle = get_handle();
+                        auto cb = event_cb_;
+                        auto self = shared_from_this();
+                        HnwBase_Async([handle, cb, self]()
+                            {
+                                if (cb)
+                                    cb((std::int64_t)handle, \
+                                        (int)HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED,\
+                                        nullptr);
+                            });
+                    }while (false);
+                    PRINTFLOG(BL_DEBUG, "TcpClientChannel[%I64d] closed ", handle_);
                     try
                     {
                         socket_.shutdown(socket_base::shutdown_send);
                         socket_.shutdown(socket_base::shutdown_receive);
-
+                        socket_.close();
                     }
                     catch (std::exception& e)
                     {
@@ -101,10 +117,6 @@ namespace hnw
                         EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_NUKNOW_ERROR,"close fail");
                         return HNW_BASE_ERR_CODE::HNW_BASE_NUKNOW_ERROR;
                     }
-                    socket_.close();
-                    bconn_ = false;
-                    PRINTFLOG(BL_DEBUG, "TcpClientChannel[%I64d] closed ", handle_);
-                    EVENT_OK(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED);
                     return HNW_BASE_ERR_CODE::HNW_BASE_OK;
                 }
                 return HNW_BASE_ERR_CODE::HNW_BASE_EMPTY_SOCKET;

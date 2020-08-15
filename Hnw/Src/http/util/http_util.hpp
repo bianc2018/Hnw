@@ -65,6 +65,7 @@ namespace hnw
 		const std::string JSON_MIME("application/json; charset=UTF-8");
 		const std::string XML_MIME("application/rss+xml");
 		const std::string HTML_MIME("text/html");
+		const std::string OCT_MIME("application/octet-stream");
 		const std::string ACCEPT_ALL("*/*");
 		const std::string HNW_HTTP_UA("HnwHttpClient/1.0");
 
@@ -119,7 +120,8 @@ namespace hnw
 		}
 
 		//获取对应的MIME .mp4
-		static std::string http_mime(const std::string& ext, const std::string& default_d = HTML_MIME)
+		static std::string http_mime(const std::string& ext, 
+			const std::string& default_d = OCT_MIME)
 		{
 			static std::map<std::string, std::string> m = \
 			{
@@ -189,7 +191,7 @@ namespace hnw
 
 		//获取uri对应mime
 		static std::string get_http_mime_by_uri(const std::string& uri,
-			const std::string& default_d = HTML_MIME)
+			const std::string& default_d = OCT_MIME)
 		{
 			//.
 			auto p = uri.find_last_of('.');
@@ -544,11 +546,13 @@ namespace hnw
 
 		std::string ansi_to_utf8(const std::string source)
 		{
-			return conv(source, "gbk", "utf-8");
+			//return conv(source, "GB2312", "UTF-8");
+			return boost::locale::conv::to_utf<char>(source, std::string("gb2312"));
 		}
 		std::string utf8_to_ansi(const std::string source)
 		{
-			return conv(source, "utf-8", "gbk");
+			//return conv(source, "UTF-8", "GB2312");
+			return boost::locale::conv::from_utf<char>(source, std::string("gb2312"));
 		}
 	}
 }

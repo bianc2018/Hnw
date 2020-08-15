@@ -27,7 +27,8 @@
 #define HTTP_FILE_FLAG_DELETE 0x04
 //已存在的创建 新的
 #define HTTP_FILE_FLAG_CREATE_NEW 0x08
-
+//写打开
+#define HTTP_FILE_FLAG_WRITE 0x10
 #include <map>
 
 enum HTTP_BODY_TYPE
@@ -188,6 +189,10 @@ public:
     virtual bool get_cookie(const std::string& name, HnwCookie& out) = 0;
     virtual bool del_cookie(const std::string& name) = 0;
     
+    //true 保持长链接 false 短链接
+    virtual bool keep_alive() = 0;
+    //
+    virtual void keep_alive(bool is_alive) = 0;
 private:
 
 };
@@ -272,6 +277,10 @@ public:
 public:
     //自动创建body
     virtual bool auto_create_body()=0;
+    //set response file
+    virtual bool set_file_body(const std::string& path, \
+        const HttpRange& req_range = HttpRange(),
+        int flag = HTTP_FILE_FLAG_OPEN) = 0;
 };
 typedef std::shared_ptr<HnwHttpResponse> SPHnwHttpResponse;
 

@@ -46,22 +46,20 @@ HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_GenerateHead(HNW_HANDLE handle
 
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Request(HNW_HANDLE handle, SPHnwHttpRequest req)
 {
-    auto userdata = HnwBase_GetUserData(handle);
-    if (userdata)
+    auto sp = service.get_session(handle);
+    if (sp)
     {
-        auto session = (hnw::http::Session*)userdata;
-        return session->send(req);
+        return sp->send(req);
     }
     return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
 }
 
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Response(HNW_HANDLE handle, SPHnwHttpResponse res)
 {
-    auto userdata = HnwBase_GetUserData(handle);
-    if (userdata)
+    auto sp = service.get_session(handle);
+    if (sp)
     {
-        auto session = (hnw::http::Session*)userdata;
-        return session->send(res);
+        return sp->send(res);
     }
     return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
 }

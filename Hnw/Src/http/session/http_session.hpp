@@ -38,23 +38,23 @@ namespace hnw
 		};
 
 		//为了兼容日志 
-		class Session:public hnw::parser::ParserBase
+		class Session :public std::enable_shared_from_this<Session> /*:public hnw::parser::ParserBase*/
 		{
+			
 		public:
-			Session(HNW_HANDLE handle, PeerType type)
-				:hnw::parser::ParserBase(handle),
-				 type_(type),recv_parser_(nullptr), 
+			Session(HNW_HANDLE handle, PeerType type, HNW_EVENT_CB cb)
+				:/*hnw::parser::ParserBase(handle),*/
+				handle_(handle),
+				type_(type), recv_parser_(nullptr),
 				send_flag_(false),
-				connect_flag_(false)
+				connect_flag_(false),
+				close_after_send_flag_(false)
 			{
 				session_head_ = http::HeadImpl::generate();
-				add_session_head(util::HTTP_UA, util::HNW_HTTP_UA);
+				if (type_ == Client)
+					add_session_head(util::HTTP_UA, util::HNW_HTTP_UA);
 				add_session_head(util::HTTP_ACCEPT, util::ACCEPT_ALL);//
 				add_session_head(util::HTTP_CONN, util::HTTP_CONN_CLOSE);
-			}
-			//init
-			HNW_BASE_ERR_CODE init()
-			{
 				//根据类型创建解析器
 				if (type_ == PeerType::Server)
 					recv_parser_ = make_shared_safe<hnw::parser::HttpRequestParser>(handle_);
@@ -63,13 +63,33 @@ namespace hnw
 				if (nullptr == recv_parser_)
 				{
 					PRINTFLOG(BL_ERROR, "create recv_parser_ fail");
-					return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
+					//return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
 				}
-				recv_parser_->set_event_cb(event_cb_);
-				recv_parser_->set_log_cb(log_cb_);
-				recv_parser_->set_make_shared_cb(make_shared_);
-				return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+				else
+				{
+					recv_parser_->set_event_cb(cb);
+				}
+
+				HnwBase_SetEvntCB(handle, cb);
 			}
+			//init
+			//HNW_BASE_ERR_CODE init()
+			//{
+			//	//根据类型创建解析器
+			//	if (type_ == PeerType::Server)
+			//		recv_parser_ = make_shared_safe<hnw::parser::HttpRequestParser>(handle_);
+			//	else if (type_ == PeerType::Client)
+			//		recv_parser_ = make_shared_safe<hnw::parser::HttpResponseParser>(handle_);
+			//	if (nullptr == recv_parser_)
+			//	{
+			//		PRINTFLOG(BL_ERROR, "create recv_parser_ fail");
+			//		return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
+			//	}
+			//	recv_parser_->set_event_cb(event_cb_);
+			//	recv_parser_->set_log_cb(log_cb_);
+			//	recv_parser_->set_make_shared_cb(make_shared_);
+			//	return HNW_BASE_ERR_CODE::HNW_BASE_OK;
+			//}
 
 			//发送
 			HNW_BASE_ERR_CODE send(std::shared_ptr<HnwHttpResponse> response)
@@ -132,17 +152,17 @@ namespace hnw
 			}
 
 			//可以继承 各种回调
-			std::shared_ptr<Session> generate(HNW_HANDLE handle, PeerType type)
+			static std::shared_ptr<Session> generate(HNW_HANDLE handle, PeerType type,HNW_EVENT_CB cb)
 			{
-				std::shared_ptr<Session> sp = make_shared_safe<Session>(handle, type);
-				sp->set_log_cb(log_cb_);
+				std::shared_ptr<Session> sp = make_shared_safe<Session>(handle, type,cb);
+				/*sp->set_log_cb(log_cb_);
 				sp->set_event_cb(event_cb_);
-				sp->set_make_shared_cb(make_shared_);
+				sp->set_make_shared_cb(make_shared_);*/
 				return sp;
 			}
 			
 			//原始回调
-			void even_cb(std::int64_t handle, int tt, std::shared_ptr<void> event_data)
+			/*void even_cb(std::int64_t handle, int tt, std::shared_ptr<void> event_data)
 			{
 				if (event_cb_)
 					event_cb_(handle, tt, event_data);
@@ -150,7 +170,7 @@ namespace hnw
 				{
 					PRINTFLOG(BL_WRAN, "event cb is nullptr");
 				}
-			}
+			}*/
 
 			//链接建立
 			void on_connect_establish()
@@ -175,13 +195,17 @@ namespace hnw
 		private:
 			void clear()
 			{
-				//防止自引用
+				////防止自引用
+				//if (make_shared_)
+				//	make_shared_ = nullptr;
 
-				make_shared_ = nullptr;
+				/*if(event_cb_)
+					event_cb_ = nullptr;*/
 
-				event_cb_ = nullptr;
+			/*	if(log_cb_)
+					log_cb_ = nullptr;*/
+				return;
 
-				log_cb_ = nullptr;
 			}
 
 			//移动buff
@@ -205,6 +229,13 @@ namespace hnw
 			//数据读取回调
 			size_t on_read(char* buff, size_t buff_size)
 			{
+				auto self = shared_from_this();
+				if (nullptr == self)
+				{
+					PRINTFLOG(BL_ERROR, "[%llu] is released,dont read", handle_);;
+					//发送过程中 保持活跃
+					return 0;
+				}
 				if (Server == type_)
 					return on_read_response(buff, buff_size);
 				else if (Client == type_)
@@ -224,6 +255,12 @@ namespace hnw
 						{
 							PRINTFLOG(BL_DEBUG, "[%lld] all request is sended", handle_);
 							send_flag_ = false;
+							if (close_after_send_flag_)
+							{
+								PRINTFLOG(BL_DEBUG, "[%lld] close_after_send_flag_ is on", handle_);
+								//auto self = shared_from_this();//保持
+								HnwHttp_Close(handle_);
+							}
 							//结束
 							return 0;
 						}
@@ -282,19 +319,43 @@ namespace hnw
 					//取一个数据
 					if (nullptr == send_status_.response)
 					{
+						//bool is_end = false;
+
+						/*{*/
 						std::lock_guard<std::mutex> lk(send_lock_);
 						if (response_queue_.empty())
 						{
 							PRINTFLOG(BL_DEBUG, "[%lld] all request is sended", handle_);
 							send_flag_ = false;
-							//结束
+							if (close_after_send_flag_)
+							{
+								PRINTFLOG(BL_DEBUG, "[%lld] close_after_send_flag_ is on", handle_);
+								//auto self = shared_from_this();//保持
+								HnwHttp_Close(handle_);
+							}
 							return 0;
 						}
-						send_status_.response = response_queue_.front();
-						response_queue_.pop();
-						send_status_.status = EN_SEND_LINE;
-						pre_send(send_status_.response);
-						send_status_.cache = send_status_.response->line->string() + util::CRLF;
+						else
+						{
+							//is_end = false;
+							send_status_.response = response_queue_.front();
+							response_queue_.pop();
+							send_status_.status = EN_SEND_LINE;
+							pre_send(send_status_.response);
+							send_status_.cache = send_status_.response->line->string() + util::CRLF;
+						}
+						//}
+
+						//if (is_end)
+						//{
+						//	//结束
+						//	if (close_after_send_flag_)
+						//	{
+						//		PRINTFLOG(BL_DEBUG, "[%lld] close_after_send_flag_ is on", handle_);
+						//	//	HnwHttp_Close(handle_);
+						//	}
+						//	return 0;
+						//}
 					}
 
 					if (EN_SEND_LINE == send_status_.status)
@@ -378,16 +439,23 @@ namespace hnw
 				{
 					response->head->add_head(util::HTTP_CT, util::HTML_MIME);
 				}
-
+			
 				//合并
 				response->head->merge(session_head_, false);
+
+				if (util::HTTP_CONN_CLOSE == response->head->get_head(util::HTTP_CONN,\
+					util::HTTP_CONN_CLOSE))
+				{
+					close_after_send_flag_ = true;
+				}
 				
 			}
 			//std::string get_mime_by_url(const std::string &url)
 		private:
 			//启动参数
 			PeerType type_;
-
+			//通信句柄
+			HNW_HANDLE handle_;
 			//接收解析器
 			std::shared_ptr<hnw::parser::ParserBase>  recv_parser_;
 
@@ -409,6 +477,8 @@ namespace hnw
 
 			SPHnwHttpHead session_head_;
 
+			//发送之后是否关闭
+			std::atomic_bool close_after_send_flag_;
 		}; 
 	
 		//共享指针

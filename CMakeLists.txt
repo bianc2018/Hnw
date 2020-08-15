@@ -23,6 +23,8 @@ if(WIN32)
       message("WIN32 编译设置")
       ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS=1)
       set(DEFAULT_LIB Crypt32)
+      set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+      set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 elseif(UNIX)
      message("UNIX 编译设置")
      #通用的底层库 default lib
@@ -30,7 +32,7 @@ elseif(UNIX)
 endif()
 
 #依赖 boost openss
-find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options locale)
 include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 

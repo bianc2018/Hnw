@@ -306,6 +306,13 @@ namespace hnw
             config(handle, SET_TIMER_CB, &call, sizeof(call));
             return connect(handle, NET_INVALID_POINT);
         }
+
+        //异步任务执行
+        virtual HNW_BASE_ERR_CODE async(std::function<void()> call)
+        {
+            PRINTFLOG(BL_DEBUG, " no support :async");
+            return HNW_BASE_ERR_CODE::HNW_BASE_NO_SUPPORT;
+        }
     private:
 
         //事件回调 可以考虑异步处理
@@ -313,6 +320,10 @@ namespace hnw
             int type, \
             std::shared_ptr<void> event_data, HNW_EVENT_CB cb)
         {
+            //真正调用函数
+            if (cb)
+                cb(handle, type, event_data);
+
             //发生错误就关闭
             if ((int)HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR== type)
             {
@@ -325,15 +336,13 @@ namespace hnw
                 HnwBase_Close(handle);
 
                 //真正调用函数
-                if (cb)
-                    cb(handle, (int)HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED, event_data);
+               /* if (cb)
+                    cb(handle, (int)HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED, event_data);*/
             }
 
             //可以统计用
 
-            //真正调用函数
-            if (cb)
-                cb(handle, type, event_data);
+            
         }
     
     protected:

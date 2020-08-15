@@ -57,6 +57,9 @@ HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_QueryDNS(const std::string &ho
 
 //获取广播地址
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_BroadCast(std::string &ip);
+
+//获取异步执行一个任务
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Async(std::function<void()> call);
 #endif // !BNS_H_
 
 

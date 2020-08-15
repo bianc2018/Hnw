@@ -189,7 +189,7 @@ namespace hnw
                     return false;
                 }
                 //区间
-                auto vec = util::split(src, ";");
+                auto vec = util::split(bv[1], ";");
                 
                 for (auto i = 0; i < vec.size(); ++i)
                 {
@@ -330,11 +330,11 @@ namespace hnw
             virtual bool set_content_range(const HttpRange& range)
             {
                 //Content-Range: bytes 0-10/3103
-                const int tmp_size = 32;
+                const int tmp_size = 256;
                 char tmp[tmp_size] = { 0 };
                 if (snprintf(tmp, tmp_size, "%s %llu-%llu/%llu",
                     util::HTTP_RANGE_BYTE.c_str(),
-                    range.start, range.end,range.total) >= 32)
+                    range.section_start(), range.section_end(),range.total) >= tmp_size)
                 {
                     PRINTFLOG(BL_ERROR, "BUFF ERROR");
                     return false;
@@ -473,6 +473,24 @@ namespace hnw
                 del_head(util::HTTP_COOKIE);
                 add_head(util::HTTP_COOKIE, cookie_to_string(data));
                 return true;
+            }
+
+            //保活
+            virtual bool keep_alive()
+            {
+                if (get_head(util::HTTP_CONN, util::HTTP_CONN_CLOSE)\
+                    == util::HTTP_CONN_CLOSE)
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            virtual void keep_alive(bool is_alive)
+            {
+                del_head(util::HTTP_CONN);
+                add_head(util::HTTP_CONN, \
+                    is_alive ? util::HTTP_CONN_KEEPALIVE : util::HTTP_CONN_CLOSE);
             }
         private:
             virtual bool cookie_from_string(const std::string& str, std::vector<HnwCookie>& cookies)

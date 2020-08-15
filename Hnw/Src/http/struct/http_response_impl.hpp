@@ -47,6 +47,26 @@ namespace hnw
 				}
 				return true;
 			}
+
+			virtual bool set_file_body(const std::string& path,\
+				const HttpRange &req_range= HttpRange(),
+				int flag = HTTP_FILE_FLAG_OPEN)override
+			{
+				HttpRange range = req_range;
+				auto temp_body = http::FileBodyImpl::generate(path, range, flag);
+				if (temp_body)
+				{
+					range.total = PTR_CAST(FileBodyImpl, temp_body)->file_size();
+					head->set_content_range(range);
+					if (head->content_type().empty())
+					{
+						head->content_type(util::get_http_mime_by_uri(path));
+					}
+					body = temp_body;
+					return true;
+				}
+				return false;
+			}
 		};
 	}
 }

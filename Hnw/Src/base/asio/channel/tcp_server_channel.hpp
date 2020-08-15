@@ -133,7 +133,8 @@ namespace hnw
                         return HNW_BASE_ERR_CODE::HNW_BASE_NUKNOW_ERROR;
                     }
                     PRINTFLOG(BL_INFO, "[%I64d] TcpServerChannel is closed", handle_);
-                    EVENT_OK(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED);
+                   // EVENT_OK(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED);
+                    EVENT_CB_ASYNC(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED, nullptr);
                     return HNW_BASE_ERR_CODE::HNW_BASE_OK;
                 }
                 return HNW_BASE_ERR_CODE::HNW_BASE_EMPTY_SOCKET;

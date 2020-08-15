@@ -44,8 +44,9 @@ namespace hnw
                 if (!util::file_is_exist(file_name_))
                 {
                     //不存在，是否新建
-                    if (flag & HTTP_FILE_FLAG_CREATE|| flag & HTTP_FILE_FLAG_CREATE_NEW)
+                    if (flag_ & HTTP_FILE_FLAG_CREATE|| flag_ & HTTP_FILE_FLAG_CREATE_NEW)
                     {
+                        
                         if (!util::create_null_file(file_name_, range_.total))
                         {
                             PRINTFLOG(BL_ERROR, "create_null_file fail name=%s",
@@ -64,7 +65,7 @@ namespace hnw
                 else
                 {
                     //存在，是否新建
-                    if (flag & HTTP_FILE_FLAG_CREATE_NEW)
+                    if (flag_ & HTTP_FILE_FLAG_CREATE_NEW)
                     {
                         util::remove_file(file_name_);
 
@@ -81,6 +82,11 @@ namespace hnw
                         size_ = util::file_size(file_name_);
                         range_.total = size_;
                     }
+                }
+
+                if (flag_ & HTTP_FILE_FLAG_CREATE || flag_ & HTTP_FILE_FLAG_CREATE_NEW)
+                {//新建默认
+                    flag_ |= HTTP_FILE_FLAG_WRITE;
                 }
 
                 try
@@ -108,11 +114,23 @@ namespace hnw
                         return false;
                     }
 
-                    //文件映射
-                    boost::interprocess::file_mapping fmap(file_name_.c_str(),
-                        boost::interprocess::mode_t::read_write);
-                    fmap_.swap(fmap);
-                    return true;
+                    if (flag_ & HTTP_FILE_FLAG_WRITE)
+                    {
+                        //文件映射
+                        boost::interprocess::file_mapping fmap(file_name_.c_str(),
+                            boost::interprocess::mode_t::read_write);
+                        fmap_.swap(fmap);
+                        return true;
+                    }
+                    else
+                    {
+                        //文件映射
+                        boost::interprocess::file_mapping fmap(file_name_.c_str(),
+                            boost::interprocess::mode_t::read_only);
+                        fmap_.swap(fmap);
+                        return true;
+                    }
+                   
                 }
                 catch (const std::exception&e)
                 {
@@ -161,6 +179,12 @@ namespace hnw
             
             virtual size_t write_body_cb(const char* buff, size_t buff_size, std::uint64_t start_pos)override
             {
+                //不允许写
+                if (!(flag_ & HTTP_FILE_FLAG_WRITE))
+                {
+                    PRINTFLOG(BL_ERROR, "write error ,HTTP_FILE_FLAG_WRITE not set");
+                    return 0;
+                }
                 size_t offset = 0;
                 start_pos += range_.start;
 
@@ -186,6 +210,10 @@ namespace hnw
                 return offset;
             }
 
+            virtual std::uint64_t file_size()
+            {
+                return size_;
+            }
         public:
             //已有的文件
             static SPHnwHttpBody generate(const std::string& name,
