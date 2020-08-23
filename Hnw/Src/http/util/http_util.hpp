@@ -12,9 +12,32 @@
 #elif __linux__
 
 #endif
+#include <iostream>
+#include <map>
 
 #include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
+#include <boost/algorithm/hex.hpp>
+#include <boost/uuid/detail/md5.hpp>
+#include <boost/uuid/detail/sha1.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+
+#define GET_VALUE_FOR_MAP(map,key,value,default_value)\
+do\
+{\
+	auto d = map.find(key);\
+	if (d == map.end())\
+	{\
+		value = default_value;\
+	}\
+	else\
+	{\
+		value = d->second;\
+	}\
+} while (false)
+#define GET_VALUE_FOR_MAP_STR(map,key,value) GET_VALUE_FOR_MAP(map,key,value,"")
 namespace hnw
 {
 	namespace util
@@ -84,7 +107,8 @@ namespace hnw
 		const std::string HTTP_TRANSFER_ENCODING("Transfer-Encoding");
 		const std::string HTTP_SET_COOKIE("Set-Cookie");
 		const std::string HTTP_COOKIE("Cookie");
-
+		const std::string HTTP_WWW_AUTH("WWW-Authenticate");
+		const std::string HTTP_AUTH("Authorization");
 		const std::string HTTP_RANGE_BYTE("bytes");
 		//分块传输
 		const std::string HTTP_CHUNKED("chunked");
@@ -553,6 +577,138 @@ namespace hnw
 		{
 			//return conv(source, "UTF-8", "GB2312");
 			return boost::locale::conv::from_utf<char>(source, std::string("gb2312"));
+		}
+
+		//base64
+		std::string encode_base64(const std::string& src)
+		{
+			typedef boost::archive::iterators::base64_from_binary<\
+				boost::archive::iterators::transform_width<\
+				std::string::const_iterator, 6, 8> > Base64EncodeIterator;
+			
+				std::stringstream result;
+			
+				std::copy(Base64EncodeIterator(src.begin()),\
+					Base64EncodeIterator(src.end()),\
+					std::ostream_iterator<char>(result));
+			
+				size_t equal_count = (3 - src.length() % 3) % 3;
+			
+				//字节数不足3个的=补全
+				for (size_t i = 0; i < equal_count; i++) 
+				{
+						result.put('=');
+				}
+			
+				return  result.str();
+		}
+		std::string decode_base64(const std::string& src)
+		{
+			typedef boost::archive::iterators::transform_width<\
+				boost::archive::iterators::binary_from_base64<\
+				std::string::const_iterator>,\
+				8, 6>  Base64DecodeIterator;
+
+			std::stringstream result;
+
+			std::copy(Base64DecodeIterator(src.begin()), \
+				Base64DecodeIterator(src.end()), \
+				std::ostream_iterator<char>(result));
+
+			return  result.str();
+		}
+
+
+		//md5摘要
+		std::string md5(const std::string& src)
+		{
+			std::string dst;
+			if (src.empty()) {
+				return "";
+			}
+
+			boost::uuids::detail::md5 boost_md5;
+			boost_md5.process_bytes(src.c_str(), src.size());
+			boost::uuids::detail::md5::digest_type digest;
+			boost_md5.get_digest(digest);
+			/*const auto char_digest = reinterpret_cast<const char*>(&digest);
+			boost::algorithm::hex(char_digest, \
+				char_digest + sizeof(boost::uuids::detail::md5::digest_type), \
+				std::back_inserter(dst));*/
+
+			for (int i = 0; i < 4; ++i) {
+				char buff[20] = {};
+				snprintf(buff, 20, "%08x", digest[i]);
+				dst += buff;
+			}
+			return dst;
+		}
+
+		//sha1
+		std::string sha1(const std::string& src)
+		{
+			std::string dst;
+			if (src.empty()) {
+				return "";
+			}
+			char hash[20] = {0};
+			boost::uuids::detail::sha1 boost_sha1;
+			boost_sha1.process_bytes(src.c_str(), src.size());
+			boost::uuids::detail::sha1::digest_type digest;
+			boost_sha1.get_digest(digest);
+			const char* tmp = reinterpret_cast<char*>(digest);
+			for (int i = 0; i < 5; ++i) {
+				
+				hash[i * 4] = tmp[i * 4 + 3];
+				hash[i * 4 + 1] = tmp[i * 4 + 2];
+				hash[i * 4 + 2] = tmp[i * 4 + 1];
+				hash[i * 4 + 3] = tmp[i * 4];
+			}
+			for (int i = 0; i < 20; ++i) {
+				char buff[20] = {};
+				snprintf(buff, 20, "%02X", hash[i]);
+				dst += buff;
+			}
+
+			return  dst;
+			/*std::ostringstream buf;
+			for (int i = 0; i < 20; ++i) {
+				buf << setiosflags(ios::uppercase) << std::hex << ((hash[i] & 0x0000000F0) >> 4);
+				buf << setiosflags(ios::uppercase) << std::hex << (hash[i] & 0x00000000F);
+			}
+
+			return  buf.str();*/
+		}
+
+
+		//去除首尾空格
+		std::string trim(const std::string& src)
+		{
+			if (src.empty())
+			{
+				return "";
+			}
+			
+			int beg = 0, end = src.size()-1;
+			for (; beg < end; ++beg)//找开头第一个不是 空格的字符
+			{
+				if (src[beg] != ' ')
+				{
+					break;
+				}
+			}
+			if (beg == end&&(' ' == src[beg]))//全是空格
+			{
+				return "";
+			}
+			for (; end>=beg; --end)//找结尾第一个不是 空格的字符
+			{
+				if (src[end] != ' ')
+				{
+					return src.substr(beg, (end - beg+1));
+				}
+			}
+			return "";//全是空格,应该不会到这里
 		}
 	}
 }

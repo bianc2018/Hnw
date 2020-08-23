@@ -492,6 +492,220 @@ namespace hnw
                 add_head(util::HTTP_CONN, \
                     is_alive ? util::HTTP_CONN_KEEPALIVE : util::HTTP_CONN_CLOSE);
             }
+
+            //验证
+            virtual HnwWWWAuthenticate get_www_authenticate() override
+            {
+                HnwWWWAuthenticate auth;
+                auto str = get_head(util::HTTP_WWW_AUTH, "");
+                if (str.empty())
+                {
+                    PRINTFLOG(BL_ERROR, "not find key=%s", util::HTTP_WWW_AUTH.c_str());
+                    return HnwWWWAuthenticate();
+                }
+
+                //空格分割
+                auto p = str.find_first_of(" ");
+                if (std::string::npos == p||p+1 >=str.size())
+                {
+                    PRINTFLOG(BL_ERROR, "get_www_authenticate error %s", str.c_str());
+                    return HnwWWWAuthenticate();
+                }
+                auto auth_method = str.substr(0,p);
+                auto data = str.substr(p + 1);
+                auto map = split_ky(data);
+                //数字验证
+                if ("Digest" == auth_method)
+                {
+                    auth.method = DigestAuth;
+                    GET_VALUE_FOR_MAP(map, "realm", auth.realm, "");
+                    GET_VALUE_FOR_MAP(map, "nonce", auth.nonce, "");
+                    GET_VALUE_FOR_MAP(map, "opaque", auth.opaque, "");
+                    GET_VALUE_FOR_MAP(map, "qop", auth.qop, "");
+                    return auth;
+                }
+                else if("Basic" == auth_method)
+                {
+                    auth.method = BasicAuth;
+                    GET_VALUE_FOR_MAP(map, "realm", auth.realm, "");
+                    return auth;
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "%s error,unsupport auth type %s", str.c_str(), auth_method);
+                    return HnwWWWAuthenticate();
+                }
+
+            }
+            virtual bool set_www_authenticate(const HnwWWWAuthenticate& auth)override
+            {
+                if (NoneAuth == auth.method)
+                {
+                    //
+                    PRINTFLOG(BL_ERROR, "not support auth method NoneAuth");
+                    return false;
+                }
+                std::string data;
+                if (BasicAuth == auth.method)
+                {
+                    data = "Basic realm=\"" + auth.realm+ "\"";
+                }
+                else if (DigestAuth == auth.method)
+                {
+                    /*
+                    * Digest realm="testrealm@host.com",
+                        qop="auth,auth-int",
+                        nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+                        opaque="5ccc069c403ebaf9f0171e9517f40e41"
+                    */
+                    data = "Digest realm=\"" + auth.realm + "\","\
+                        "qop=\"" + auth.qop + "\","
+                        "nonce=\"" + auth.nonce + "\","
+                        "opaque=\"" + auth.opaque + "\"";
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "not support auth method %d",auth.method);
+                    return false;
+                }
+                del_head(util::HTTP_WWW_AUTH);
+                add_head(util::HTTP_WWW_AUTH, data);
+                return true;
+            }
+
+            virtual HnwAuthorization get_authorization()
+            {
+                HnwAuthorization auth;
+                auto str = get_head(util::HTTP_AUTH, "");
+                if (str.empty())
+                {
+                    PRINTFLOG(BL_ERROR, "not find key=%s", util::HTTP_AUTH.c_str());
+                    return HnwAuthorization();
+                }
+
+                //空格分割
+                auto p = str.find_first_of(" ");
+                if (std::string::npos == p || p + 1 >= str.size())
+                {
+                    PRINTFLOG(BL_ERROR, "get_authorization error %s", str.c_str());
+                    return HnwAuthorization();
+                }
+                auto auth_method = str.substr(0, p);
+                auto data = str.substr(p + 1);
+                
+                //数字验证
+                if ("Digest" == auth_method)
+                {
+                    auto map = split_ky(data);
+                    auth.method = DigestAuth;
+                    GET_VALUE_FOR_MAP(map, "realm", auth.realm, "");
+                    GET_VALUE_FOR_MAP(map, "nonce", auth.nonce, "");
+                    GET_VALUE_FOR_MAP(map, "opaque", auth.opaque, "");
+                    GET_VALUE_FOR_MAP(map, "qop", auth.qop, "");
+                    GET_VALUE_FOR_MAP(map, "cnonce", auth.cnonce, "");
+                    GET_VALUE_FOR_MAP(map, "nc", auth.nc, "");
+                    GET_VALUE_FOR_MAP(map, "response", auth.response, "");
+                    GET_VALUE_FOR_MAP(map, "uri", auth.uri, "");
+                    GET_VALUE_FOR_MAP(map, "username", auth.username, "");
+                    return auth;
+                }
+                else if ("Basic" == auth_method)
+                {
+                    auth.method = BasicAuth;
+                    auto decode = util::decode_base64(data);
+                    auto u_p = util::split(decode, ":");
+                    if (u_p.size() < 2)
+                    {
+                        PRINTFLOG(BL_ERROR, "%s de_base64-> %s,not found username and password"\
+                            , data.c_str(), decode.c_str());
+                        return HnwAuthorization();
+                    }
+                    auth.username = u_p[0];
+                    auth.password = u_p[1];
+                    return auth;
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "%s error,unsupport auth type %s", str.c_str(), auth_method);
+                    return HnwAuthorization();
+                }
+            }
+            virtual bool set_authorization(const HnwAuthorization& auth, \
+                const std::string& http_method = "GET")override
+            {
+                if (NoneAuth == auth.method)
+                {
+                    //
+                    PRINTFLOG(BL_ERROR, "not support auth method NoneAuth");
+                    return false;
+                }
+                std::string data;
+                if (BasicAuth == auth.method)
+                {
+                    data = "Basic "+get_auth_info(auth, http_method);
+                }
+                else if (DigestAuth == auth.method)
+                {
+                    /*
+                    * Digest username="Mufasa",
+                     realm="testrealm@host.com",
+                     nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093",
+                     uri="/dir/index.html",
+                     qop=auth,
+                     nc=00000001,
+                     cnonce="0a4f113b",
+                     response="6629fae49393a05397450978507c4ef1",
+                     opaque="5ccc069c403ebaf9f0171e9517f40e41"
+                    */
+                    data = "Digest username=\"" + auth.username + "\","\
+                        "realm=\"" + auth.realm + "\","
+                        "nonce=\"" + auth.nonce + "\","
+                        "uri=\"" + auth.uri + "\","
+                        "qop=" + auth.qop + ","
+                        "nc=" + auth.nc + ","
+                        "cnonce=\"" + auth.cnonce + "\","
+                        "response=\"" + get_auth_info(auth, http_method) + "\","
+                        "opaque=\"" + auth.opaque + "\",";
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "not support auth method %d", auth.method);
+                    return false;
+                }
+                del_head(util::HTTP_AUTH);
+                add_head(util::HTTP_AUTH, data);
+                return true;
+            }
+
+            //检查验证信息
+            virtual bool check_auth(const std::string& password,
+                const std::string& http_method = "GET") override
+            {
+                return check_auth(get_authorization(), password, http_method);
+            }
+
+            //检查验证信息
+            virtual bool check_auth(const HnwAuthorization& auth,
+                const std::string& password, const std::string& http_method = "GET")override
+            {
+                if (BasicAuth == auth.method)
+                {
+                    // \0对比会出错
+                    //return (auth.password == password);
+                    return (0 == strcmp(auth.password.c_str(),password.c_str()));
+                }
+                else if (DigestAuth == auth.method)
+                {
+                    HnwAuthorization a = auth;
+                    a.password = password;
+                    return (get_auth_info(a, http_method) == a.response);
+                }
+                else
+                {
+                    PRINTFLOG(BL_ERROR, "not support auth method %d", auth.method);
+                    return false;
+                }
+            }
         private:
             virtual bool cookie_from_string(const std::string& str, std::vector<HnwCookie>& cookies)
             {
@@ -519,6 +733,7 @@ namespace hnw
                 }
                 return res;
             }
+     
             virtual bool set_cookie_from_string(const std::string& str, HnwSetCookie& cookies)
             {
                 auto kvs = util::split(str, ";");
@@ -559,6 +774,7 @@ namespace hnw
                 }
                 return true;
             }
+            
             virtual std::string set_cookie_to_string(const HnwSetCookie& cookies)
             {
                 auto res = cookies.value.key + "=" + cookies.value.value ;
@@ -579,6 +795,115 @@ namespace hnw
                     res += "; HttpOnly";
                 }
                 return res;
+            }
+
+            //split k&v 分割 a=1,b=2的内容，忽略 “” ''
+            virtual std::map<std::string, std::string> split_ky(const std::string& src,
+                const char& link = ',')
+            {
+                std::map<std::string, std::string> k_vs;
+                std::string key, value;
+                enum SplitKeyValueStatus
+                {
+                    Status_KEY,
+                    Status_VALUE,
+                    Status_STR,
+                };
+                SplitKeyValueStatus s = Status_KEY;
+                for (auto c : src)
+                {
+                    if (Status_KEY == s)
+                    {
+                        if (c == '=')
+                        {
+                            s = Status_VALUE;
+                            continue;
+                        }
+                        else
+                        {
+                            key += c;
+                            continue;
+                        }
+
+                    }
+                    else if (Status_VALUE == s)
+                    {
+                        if (c == '"' || c == '\'')
+                        {
+                            s = Status_STR;
+                            continue;
+                        }
+                        else if (c == link)
+                        {
+                            
+                            //找到
+                            k_vs[util::trim(key)] = util::trim(value);
+                            key = value = "";
+                            s = Status_KEY;
+                            continue;
+                        }
+                        else
+                        {
+                            value += c;
+                            continue;
+                        }
+                    }
+                    else if (Status_STR == s)
+                    {
+                        if (c == '"' || c == '\'')
+                        {
+                            s = Status_VALUE;
+                            continue;
+                        }
+                        else
+                        {
+                            value += c;
+                            continue;
+                        }
+                    }
+                }
+                if (!key.empty())
+                {
+                    //找到
+                    k_vs[util::trim(key)] = util::trim(value);
+                }
+                return k_vs;
+            }
+
+            //获取验证信息
+            virtual std::string get_auth_info(const HnwAuthorization& auth,\
+                const std::string& http_method="GET")
+            {
+                if (auth.method == BasicAuth)
+                {
+                    return util::encode_base64(auth.username + ":" + auth.password);
+                }
+                if (auth.method == DigestAuth)
+                {
+                    /*
+                    * 如下所述，response 值由三步计算而成。当多个数值合并的时候，使用冒号作为分割符。
+                        1.对用户名、认证域(realm)以及密码的合并值计算 MD5 哈希值，结果称为 HA1。
+                        2.对HTTP方法以及URI的摘要的合并值计算 MD5 哈希值，例如，GET 和 /dir/index.html，结果称为 HA2。
+                        3.对 HA1、服务器密码随机数(nonce)、请求计数(nc)、客户端密码随机数(cnonce)、
+                        \保护质量(qop)以及 HA2 的合并值计算 MD5 哈希值。结果即为客户端提供的 response 值。
+                        因为服务器拥有与客户端同样的信息，因此服务器可以进行同样的计算，以验证客户端提交的 response 值的正确性。
+                        \在上面给出的例子中，结果是如下计算的。 \
+                        （MD5()表示用于计算 MD5 哈希值的函数；“\”表示接下一行；引号并不参与计算）
+                        完成 RFC 2617 中所给出的示例，将在每步得出如下结果。
+
+                    */
+                    auto ha1 = util::md5(auth.username + ":" + auth.realm + ":" + auth.password);
+                    auto ha2 = util::md5(http_method + ":" + auth.uri);
+
+                    //
+                    return util::md5(ha1 + ":" \
+                        + auth.nonce + ":" + auth.nc + ":" \
+                        + auth.cnonce + ":" + auth.qop + ":" + ha2);
+                }
+                else
+                {
+                    return "";
+                }
             }
         public:
             static SPHnwHttpHead generate()

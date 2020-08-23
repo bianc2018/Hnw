@@ -129,6 +129,46 @@ struct HnwSetCookie
     std::string path = "";
     bool is_secure=false;
 };
+//验证字段
+//验证算法
+enum HnwHttpAuthMethod
+{
+    //无验证信息
+    NoneAuth,
+    //基础
+    BasicAuth,
+    //数据摘要
+    DigestAuth,
+};
+struct HnwWWWAuthenticate
+{
+    HnwHttpAuthMethod method= HnwHttpAuthMethod::NoneAuth;
+    std::string realm;
+
+    std::string    qop="auth";
+    std::string    nonce;
+    std::string    opaque;
+};
+struct HnwAuthorization
+{
+    HnwHttpAuthMethod method= HnwHttpAuthMethod::NoneAuth;
+    std::string username;
+    std::string password;//DigestAuth 服务端无数值，客户端作为参数输入 
+    //DigestAuth 有效
+    std::string realm;
+    std::string    nonce;
+    std::string    uri ;
+    std::string   qop;
+    std::string    nc;
+    std::string    cnonce; 
+    std::string    response;
+    std::string    opaque;
+
+    //http 请求的方法 需要用户填入
+    //授权数据
+    //std::string authorization_data;
+};
+//
 //head 字段
 class HnwHttpHead
 {
@@ -193,6 +233,19 @@ public:
     virtual bool keep_alive() = 0;
     //
     virtual void keep_alive(bool is_alive) = 0;
+
+    //验证
+    virtual HnwWWWAuthenticate get_www_authenticate()=0;
+    virtual bool set_www_authenticate(const HnwWWWAuthenticate&auth) = 0;
+
+    virtual HnwAuthorization get_authorization() = 0;
+    virtual bool set_authorization(const HnwAuthorization& auth, const std::string& http_method = "GET") = 0;
+
+    //检查验证信息
+    virtual bool check_auth(const std::string & password, const std::string& http_method = "GET") = 0;
+
+    //检查验证信息
+    virtual bool check_auth(const HnwAuthorization& auth, const std::string& password, const std::string& http_method = "GET") = 0;
 private:
 
 };

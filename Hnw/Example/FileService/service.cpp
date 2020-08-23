@@ -218,14 +218,46 @@ void file::FileServce::http_event_cb(std::int64_t handle, int t, std::shared_ptr
         }
         response->head->keep_alive(request->head->keep_alive());
 
-        ret = on_request(request, response);
-        if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
+        //验证头
+        auto req_auth = request->head->get_authorization();
+        //检验
+        if (NoneAuth != req_auth.method&&req_auth.username=="admin")
         {
-            auto path = HnwUtil_Utf8ToAnsi(HnwUtil_UrlDecode(request->line->path()));
-            printf("on_request %s error,code=%d\n", path.c_str(), ret);
-            HnwHttp_Close(handle);
-            return;
+            if (request->head->check_auth(req_auth, "admin\0", request->line->method()))
+            {
+                ret = on_request(request, response);
+                if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
+                {
+                    auto path = HnwUtil_Utf8ToAnsi(HnwUtil_UrlDecode(request->line->path()));
+                    printf("on_request %s error,code=%d\n", path.c_str(), ret);
+                    HnwHttp_Close(handle);
+                    return;
+                }
+                ret = HnwHttp_Response(handle, response);
+                if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
+                {
+                    printf("on_request error,code=%d\n", ret);
+                    HnwHttp_Close(handle);
+                    return;
+                }
+            }
+            else
+            {
+                printf("check auth error\n");
+            }
         }
+        else
+        {
+            printf("no auth error\n");
+        }
+        
+        //需要鉴权
+        response->line->status_code("401");
+        HnwWWWAuthenticate auth;
+        auth.method = DigestAuth;
+        auth.realm = "fileshared@hql";
+        auth.nonce = std::string(32,'1');
+        response->head->set_www_authenticate(auth);
         ret = HnwHttp_Response(handle, response);
         if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
         {
