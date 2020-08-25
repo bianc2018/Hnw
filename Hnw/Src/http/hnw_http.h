@@ -519,6 +519,9 @@ HNW_HTTP_EXPORT_SYMBOLS std::string HnwUtil_UrlDecode(const std::string& src);
 //utf-8和ANSI转换
 HNW_HTTP_EXPORT_SYMBOLS std::string HnwUtil_Utf8ToAnsi(const std::string& src);
 HNW_HTTP_EXPORT_SYMBOLS std::string HnwUtil_AnsiToUtf8(const std::string& src);
+
+//utf-8和ANSI转换
+HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwUtil_Md5(const std::string& src, std::string& dst);
 #endif // !BNS_H_
 
 

@@ -44,8 +44,8 @@ target_link_libraries(HnwHttpCookie  HnwHttp ${DEFAULT_LIB})
 add_executable(HnwFileMap "filemap/filemap.cpp")
 target_link_libraries(HnwFileMap  Boost::filesystem)
 
-add_executable(HnwTest "test/test.cpp")
-target_link_libraries(HnwTest  )
+add_executable(HnwSTest "test/test.cpp")
+target_link_libraries(HnwSTest  )
 
 add_executable(HnwFileShared "FileService/main.cpp" "FileService/service.h" "FileService/service.cpp")
 target_link_libraries(HnwFileShared  HnwHttp Boost::filesystem Boost::program_options ${DEFAULT_LIB})

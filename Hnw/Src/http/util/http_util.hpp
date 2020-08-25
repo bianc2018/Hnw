@@ -5,7 +5,7 @@
 #ifndef HNW_HTTP_UTIL_HPP_
 #define HNW_HTTP_UTIL_HPP_
 #include "define/parser.hpp"
-
+#include "../hnw_http.h"
 
 #ifdef _WIN32
 #include "windows.h"
@@ -608,14 +608,21 @@ namespace hnw
 				boost::archive::iterators::binary_from_base64<\
 				std::string::const_iterator>,\
 				8, 6>  Base64DecodeIterator;
-
+			
 			std::stringstream result;
-
-			std::copy(Base64DecodeIterator(src.begin()), \
-				Base64DecodeIterator(src.end()), \
-				std::ostream_iterator<char>(result));
-
-			return  result.str();
+			try
+			{
+				std::copy(Base64DecodeIterator(src.begin()), \
+					Base64DecodeIterator(src.end()), \
+					std::ostream_iterator<char>(result));
+			}
+			catch (const std::exception&e)
+			{
+				PRINTFLOG(BL_ERROR, "decode base64 %s exception :%s",src.c_str(),e.what());
+				return "";
+			}
+			
+			return  result.str().c_str();
 		}
 
 

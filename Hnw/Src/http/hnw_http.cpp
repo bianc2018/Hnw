@@ -152,3 +152,11 @@ HNW_HTTP_EXPORT_SYMBOLS std::string HnwUtil_AnsiToUtf8(const std::string& src)
 {
     return hnw::util::ansi_to_utf8(src);
 }
+
+HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwUtil_Md5(const std::string& src, std::string& dst)
+{
+    dst = hnw::util::md5(src);
+    if(dst.empty())
+        return HNW_BASE_ERR_CODE::HNW_BASE_NUKNOW_ERROR;
+    return  HNW_BASE_ERR_CODE::HNW_BASE_OK;
+}

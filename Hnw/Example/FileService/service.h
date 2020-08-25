@@ -140,6 +140,12 @@ namespace file
 
 		//服务器句柄
 		HNW_HANDLE http_server_handle_;
+
+		//验证模式
+		HnwHttpAuthMethod auth_mode_;
+
+		//用户名和密码
+		std::string username_, password_;
 	};
 
 }

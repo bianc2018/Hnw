@@ -66,6 +66,13 @@ else()
 message(STATUS "BUILD_HNW_EXAMPLE ON ,build Example")
 endif()
 
+if(BUILD_HNW_TEST)
+add_subdirectory ("./Hnw/Test")
+message(STATUS "BUILD_HNW_TEST ON ,build Test")
+else()
+message(STATUS "BUILD_HNW_TEST OFF ,build Test")
+endif()
+
 
 #打包
 # 构建一个 CPack 安装包

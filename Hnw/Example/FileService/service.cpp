@@ -47,7 +47,7 @@ bool file::FileServce::int_config_from_shell(int argc, char* argv[])
 {
     
     boost::program_options::options_description opt("file shared service options");
-    
+    std::string auth_mode="None";
     opt.add_options()
         //指定该参数的默认值 
         // "apple,a" : 指定选项的全写形式为 --apple, 简写形式为 -a
@@ -66,6 +66,15 @@ bool file::FileServce::int_config_from_shell(int argc, char* argv[])
         ("dir,d",
             boost::program_options::value<std::string>(&file_dir_)->default_value("F:/"),
             "共享的文件目录")
+        ("auth_mode,am",
+            boost::program_options::value<std::string>(&auth_mode)->default_value("None"),
+            "授权验证模式 None,Digest,Basic")
+        ("username,u",
+            boost::program_options::value<std::string>(&username_)->default_value("admin"),
+            "用户名称")
+        ("password,p",
+            boost::program_options::value<std::string>(&password_)->default_value("admin"),
+            "密码")
         ("hnwlog", "开启hnw库日志")
         ("help", "帮助");
 
@@ -82,6 +91,20 @@ bool file::FileServce::int_config_from_shell(int argc, char* argv[])
     //参数解析完成后，通知variables_map去更新所有的外部变量
     //这句话执行后, 会使得apple_num和orange_num的值自动更新为选项指定的值   
     boost::program_options::notify(vm);
+    
+    //授权模式
+    if (auth_mode == "None")
+        auth_mode_ = NoneAuth;
+    else if (auth_mode == "Basic")
+        auth_mode_ = BasicAuth;
+    else if (auth_mode == "Digest")
+        auth_mode_ = DigestAuth;
+    else
+    {
+        std::cout << "not match auth_mode="<<auth_mode << std::endl;
+        std::cout << opt << std::endl;
+        return false;
+    }
 
     if (vm.count("help")) {
         std::cout << opt << std::endl;
@@ -217,22 +240,23 @@ void file::FileServce::http_event_cb(std::int64_t handle, int t, std::shared_ptr
             return ;
         }
         response->head->keep_alive(request->head->keep_alive());
-
-        //验证头
-        auto req_auth = request->head->get_authorization();
-        //检验
-        if (NoneAuth != req_auth.method&&req_auth.username=="admin")
+        
+        if (auth_mode_ != NoneAuth)
         {
-            if (request->head->check_auth(req_auth, "admin\0", request->line->method()))
+            //验证头
+            auto req_auth = request->head->get_authorization();
+            //检验
+            if (NoneAuth == req_auth.method && req_auth.username == username_)
             {
-                ret = on_request(request, response);
-                if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
-                {
-                    auto path = HnwUtil_Utf8ToAnsi(HnwUtil_UrlDecode(request->line->path()));
-                    printf("on_request %s error,code=%d\n", path.c_str(), ret);
-                    HnwHttp_Close(handle);
-                    return;
-                }
+                printf("no auth error\n");
+                //需要鉴权
+                response->line->status_code("401");
+                HnwWWWAuthenticate auth;
+                auth.method = auth_mode_;
+                auth.realm = "fileshared@hql";
+                //auth.nonce = Hnw;
+                HnwUtil_Md5(std::to_string(time(nullptr)), auth.nonce);//时间戳->md5
+                response->head->set_www_authenticate(auth);
                 ret = HnwHttp_Response(handle, response);
                 if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
                 {
@@ -240,24 +264,44 @@ void file::FileServce::http_event_cb(std::int64_t handle, int t, std::shared_ptr
                     HnwHttp_Close(handle);
                     return;
                 }
+                return;
+            }
+
+            if (!request->head->check_auth(req_auth, password_, request->line->method()))
+            {
+                printf("check auth error\n");
+                //需要鉴权
+                response->line->status_code("401");
+                HnwWWWAuthenticate auth;
+                auth.method = auth_mode_;
+                auth.realm = "fileshared@hql";
+                //auth.nonce = Hnw;
+                HnwUtil_Md5(std::to_string(time(nullptr)), auth.nonce);//时间戳->md5
+                response->head->set_www_authenticate(auth);
+                ret = HnwHttp_Response(handle, response);
+                if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
+                {
+                    printf("on_request error,code=%d\n", ret);
+                    HnwHttp_Close(handle);
+                    return;
+                }
+                return;
             }
             else
             {
-                printf("check auth error\n");
+                printf("check auth ok\n");
             }
+            
         }
-        else
+
+        ret = on_request(request, response);
+        if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
         {
-            printf("no auth error\n");
+            auto path = HnwUtil_Utf8ToAnsi(HnwUtil_UrlDecode(request->line->path()));
+            printf("on_request %s error,code=%d\n", path.c_str(), ret);
+            HnwHttp_Close(handle);
+            return;
         }
-        
-        //需要鉴权
-        response->line->status_code("401");
-        HnwWWWAuthenticate auth;
-        auth.method = DigestAuth;
-        auth.realm = "fileshared@hql";
-        auth.nonce = std::string(32,'1');
-        response->head->set_www_authenticate(auth);
         ret = HnwHttp_Response(handle, response);
         if (ret != HNW_BASE_ERR_CODE::HNW_BASE_OK)
         {
@@ -265,7 +309,7 @@ void file::FileServce::http_event_cb(std::int64_t handle, int t, std::shared_ptr
             HnwHttp_Close(handle);
             return;
         }
-        return;
+
 
     }
     else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR == type)

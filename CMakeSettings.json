@@ -7,7 +7,7 @@
       "inheritEnvironments": [ "msvc_x86_x64" ],
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows -DBUILD_HNW_EXAMPLE=ON",
+      "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=D:/lib/vcpkg-master/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows -DBUILD_HNW_EXAMPLE=ON -DBUILD_HNW_TEST=ON",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
       "intelliSenseMode": "windows-msvc-x86",
