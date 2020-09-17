@@ -1,6 +1,12 @@
-/*
-    基于hnw基础数据定义
-    hql 2020/01/04
+/*!
+* \file hnw_define.h
+* \brief HNW库的基础定义
+*
+*HNW的定义头文件，主要定义一下常量
+*
+* \author myhql
+* \version 1.0
+* \date 2020-09-13
 */
 #ifndef HNW_DEFINE_H_
 #define HNW_DEFINE_H_
@@ -9,39 +15,45 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
-//定义导出符号
+
+
 #ifdef _WIN32
+///定义导出符号
 #define HNW_BASE_EXPORT_SYMBOLS extern "C" __declspec(dllexport)
 #else
+///定义导出符号
 #define HNW_BASE_EXPORT_SYMBOLS 
 #endif
 
+///底层使用boost.asio
 #define USE_BOOST_ASIO
 
-//配置项
-//设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
+///配置项
+///设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
 #define SET_RECV_BUFF_SIZE 0
 #define GET_RECV_BUFF_SIZE 1
 
-//设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
+///设置缓存大小 输入 size_t  如果不指定通道则默认 之后创建的通道使用这个大小
 #define SET_SEND_BUFF_SIZE 2
 #define GET_SEND_BUFF_SIZE 3
 
-//设置 接受链接的线程数 输入 size_t server类型的通道有效而且不可在accept之后设置，不指定通道则之后创建的通道使用这个大小
+///设置 接受链接的线程数 输入 size_t server类型的通道有效而且不可在accept之后设置，不指定通道则之后创建的通道使用这个大小
 #define SET_SERVER_ACCEPT_NUM 4
 #define GET_SERVER_ACCEPT_NUM 5
 
-//设置SSL 服务器证书路径 输入 char[128]
+///设置SSL 服务器证书路径 输入 char[128]
 #define  SET_SSL_SERVER_CERT_FILE_PATH 10
 #define  GET_SSL_SERVER_CERT_FILE_PATH 11
-//私有密钥 private_key输入 char[128]
+
+///私有密钥 private_key输入 char[128]
 #define  SET_SSL_SERVER_PRI_KEY_FILE_PATH 12
 #define  GET_SSL_SERVER_PRI_KEY_FILE_PATH 13
-//交换密钥
+
+///交换密钥
 #define SET_SSL_SERVER_TEMP_DH_FILE_PATH 14
 #define GET_SSL_SERVER_TEMP_DH_FILE_PATH 15
 
-//超时
+///超时
 #define SET_CONNECT_TIME_OUT_MS 16
 #define GET_CONNECT_TIME_OUT_MS 17
 #define SET_RECV_TIME_OUT_MS 18
@@ -49,13 +61,13 @@
 #define SET_SEND_TIME_OUT_MS 20
 #define GET_SEND_TIME_OUT_MS 21
 
-//设置定时器触发时长回调
-//size_t
+///设置定时器触发时长回调size_t
 #define SET_TIMER_TIME_OUT_MS 22
-//hnw::HNW_CALL*
+
+///hnw::HNW_CALL*
 #define SET_TIMER_CB 23
 
-//错误码
+///错误码
 enum class HNW_BASE_ERR_CODE
 {
     //无错误

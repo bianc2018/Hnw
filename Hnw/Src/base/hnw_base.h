@@ -8,8 +8,7 @@
 #include "hnw_define.h"
 
 //增加通道
-HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Add_Channnel(HNW_CHANNEL_TYPE type\
-    , const NetPoint& local, HNW_HANDLE& handle);
+HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Add_Channnel(HNW_CHANNEL_TYPE type, const NetPoint &local, HNW_HANDLE &handle);
 
 //建立链接
 HNW_BASE_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwBase_Connect(HNW_HANDLE handle, const NetPoint& remote);

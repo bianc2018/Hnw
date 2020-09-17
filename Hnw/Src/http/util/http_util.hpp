@@ -173,7 +173,7 @@ namespace hnw
 				{ ".mpeg","video/mpeg" },
 				{ ".png","image/png" },
 				{ ".rar","application/x-rar-compressed" },
-				{ ".txt","text/plain" },
+				//{ ".txt","text/plain" },
 				{ ".ttf","font/ttf" },
 				{ ".wav","audio/wav" },
 				{ ".xls","application/vnd.ms-excel" },
