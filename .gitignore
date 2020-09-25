@@ -351,3 +351,5 @@ MigrationBackup/
 out
 /build
 /.vscode
+/doc
+/doc
