@@ -99,12 +99,12 @@ namespace hnw
             {
                 return util::split(path_, "/");
             }
-            virtual std::string  get_query(const std::string& key, const std::string & not= "")
+            virtual std::string  get_query(const std::string& key, const std::string & notfind= "")
             {
                 auto p = query_map_.find(key);
                 if (query_map_.end() == p)
                 {
-                    return not;
+                    return notfind;
                 }
                 return p->second;
             }
