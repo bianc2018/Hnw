@@ -4,6 +4,7 @@
 #include <string>
 #include <time.h>
 #include <atomic>
+#include <thread>
 #include <mutex>
 struct DownloadStaus
 {
@@ -163,7 +164,7 @@ int main(int argc, char* argv[])
     std::cin >> connnum;
     if (connnum <= 0)
         connnum = 1;
-    std::atomic_bool flag = true;
+    std::atomic_bool flag (true);
     std::thread temp([&]()
         {
             while (flag)
