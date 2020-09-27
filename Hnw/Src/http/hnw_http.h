@@ -105,7 +105,7 @@ public:
     virtual bool path(const std::string& p) = 0;
     virtual std::string path() = 0;
     virtual std::vector<std::string> path_ver() = 0;
-    virtual std::string  get_query(const std::string &key, const std::string& not="") = 0;
+    virtual std::string  get_query(const std::string &key, const std::string& notfind="") = 0;
     virtual bool  add_query(const std::string& key, const std::string & value) = 0;
 private:
 
@@ -183,10 +183,10 @@ public:
 
     virtual std::vector<std::string> get_heads(const std::string& key) = 0;
 
-    virtual std::string get_head(const std::string& key, const std::string & not) = 0;
-    virtual double get_head_double(const std::string& key, const double& not) = 0;
-    virtual std::int64_t get_head_int64(const std::string& key, const std::int64_t& not) = 0;
-    virtual std::uint64_t get_head_uint64(const std::string& key, const std::uint64_t & not) = 0;
+    virtual std::string get_head(const std::string& key, const std::string & notfind) = 0;
+    virtual double get_head_double(const std::string& key, const double& notfind) = 0;
+    virtual std::int64_t get_head_int64(const std::string& key, const std::int64_t& notfind) = 0;
+    virtual std::uint64_t get_head_uint64(const std::string& key, const std::uint64_t & notfind) = 0;
     virtual std::unordered_multimap<std::string, std::string >& get_all_head() = 0;
     virtual size_t get_head_count(const std::string& key) = 0;
     virtual size_t get_head_count() = 0;

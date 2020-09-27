@@ -57,54 +57,54 @@ namespace hnw
                 }
                 return result;
             }
-            virtual std::string get_head(const std::string& key, const std::string & not)
+            virtual std::string get_head(const std::string& key, const std::string & notfind)
             {
                 //auto p = head_.find(util::to_lower(key));
                 auto p = head_.find(key);
                 if (head_.end() == p)
-                    return not;
+                    return notfind;
                 return p->second;
             }
-            virtual double get_head_double(const std::string& key, const double& not)
+            virtual double get_head_double(const std::string& key, const double& notfind)
             {
                 auto str = get_head(key, "");
                 if (str.empty())
-                    return not;
+                    return notfind;
                 try
                 {
                     return std::stod(str);
                 }
                 catch (const std::exception&)
                 {
-                    return not;
+                    return notfind;
                 }
             }
-            virtual std::int64_t get_head_int64(const std::string& key, const std::int64_t & not)
+            virtual std::int64_t get_head_int64(const std::string& key, const std::int64_t & notfind)
             {
                 auto str = get_head(key, "");
                 if (str.empty())
-                    return not;
+                    return notfind;
                 try
                 {
                     return std::stoll(str);
                 }
                 catch (const std::exception&)
                 {
-                    return not;
+                    return notfind;
                 }
             }
-            virtual std::uint64_t get_head_uint64(const std::string& key, const std::uint64_t & not)
+            virtual std::uint64_t get_head_uint64(const std::string& key, const std::uint64_t & notfind)
             {
                 auto str = get_head(key, "");
                 if (str.empty())
-                    return not;
+                    return notfind;
                 try
                 {
                     return std::stoull(str);
                 }
                 catch (const std::exception&)
                 {
-                    return not;
+                    return notfind;
                 }
             }
             virtual std::unordered_multimap<std::string, std::string >& get_all_head()
@@ -176,7 +176,7 @@ namespace hnw
                 auto src = get_head(util::HTTP_RANGE, "");
                 if (src.empty())
                 {
-                    PRINTFLOG(BL_ERROR, "http head %s not found ", util::HTTP_RANGE.c_str());
+                    PRINTFLOG(BL_ERROR, "http head %s notfind found ", util::HTTP_RANGE.c_str());
                     return false;
                 }
                 //Range: bytes=0-1551;1-3
@@ -184,7 +184,7 @@ namespace hnw
                 auto bv = util::split(src, "=");
                 if (bv.size() != 2||(bv[0].find(util::HTTP_RANGE_BYTE)== std::string::npos))
                 {
-                    PRINTFLOG(BL_ERROR, "http head %s not support like %s ",
+                    PRINTFLOG(BL_ERROR, "http head %s notfind support like %s ",
                         util::HTTP_RANGE.c_str(), src.c_str());
                     return false;
                 }
@@ -221,7 +221,7 @@ namespace hnw
                     }
                     catch (const std::exception& e)
                     {
-                        PRINTFLOG(BL_ERROR, "http head %s not support like %s ",
+                        PRINTFLOG(BL_ERROR, "http head %s notfind support like %s ",
                             util::HTTP_RANGE.c_str(), src.c_str());
                         return false;
                     }
@@ -264,7 +264,7 @@ namespace hnw
                 auto src = get_head(util::HTTP_CONTENT_RANGE, "");
                 if (src.empty())
                 {
-                    PRINTFLOG(BL_ERROR, "http head %s not found ",
+                    PRINTFLOG(BL_ERROR, "http head %s notfind found ",
                         util::HTTP_CONTENT_RANGE.c_str());
                     return false;
                 }
@@ -274,7 +274,7 @@ namespace hnw
                 auto bv = util::split(src, " ");
                 if (bv.size() != 2 || (bv[0].find(util::HTTP_RANGE_BYTE) == std::string::npos))
                 {
-                    PRINTFLOG(BL_ERROR, "http head %s not support like %s ",
+                    PRINTFLOG(BL_ERROR, "http head %s notfind support like %s ",
                         util::HTTP_CONTENT_RANGE.c_str(), src.c_str());
                     return false;
                 }
@@ -314,14 +314,14 @@ namespace hnw
                     }
                     catch (const std::exception& e)
                     {
-                        PRINTFLOG(BL_ERROR, "http head %s not support like %s ",
+                        PRINTFLOG(BL_ERROR, "http head %s notfind support like %s ",
                             util::HTTP_CONTENT_RANGE.c_str(), src.c_str());
                         return false;
                     }
                 }
                 else
                 {
-                    PRINTFLOG(BL_ERROR, "http head %s not support like %s ",
+                    PRINTFLOG(BL_ERROR, "http head %s notfind support like %s ",
                         util::HTTP_RANGE.c_str(), src.c_str());
                     return false;
                 }
@@ -500,7 +500,7 @@ namespace hnw
                 auto str = get_head(util::HTTP_WWW_AUTH, "");
                 if (str.empty())
                 {
-                    PRINTFLOG(BL_ERROR, "not find key=%s", util::HTTP_WWW_AUTH.c_str());
+                    PRINTFLOG(BL_ERROR, "notfind find key=%s", util::HTTP_WWW_AUTH.c_str());
                     return HnwWWWAuthenticate();
                 }
 
@@ -542,7 +542,7 @@ namespace hnw
                 if (NoneAuth == auth.method)
                 {
                     //
-                    PRINTFLOG(BL_ERROR, "not support auth method NoneAuth");
+                    PRINTFLOG(BL_ERROR, "notfind support auth method NoneAuth");
                     return false;
                 }
                 std::string data;
@@ -565,7 +565,7 @@ namespace hnw
                 }
                 else
                 {
-                    PRINTFLOG(BL_ERROR, "not support auth method %d",auth.method);
+                    PRINTFLOG(BL_ERROR, "notfind support auth method %d",auth.method);
                     return false;
                 }
                 del_head(util::HTTP_WWW_AUTH);
@@ -579,7 +579,7 @@ namespace hnw
                 auto str = get_head(util::HTTP_AUTH, "");
                 if (str.empty())
                 {
-                    PRINTFLOG(BL_ERROR, "not find key=%s", util::HTTP_AUTH.c_str());
+                    PRINTFLOG(BL_ERROR, "notfind find key=%s", util::HTTP_AUTH.c_str());
                     return HnwAuthorization();
                 }
 
@@ -616,7 +616,7 @@ namespace hnw
                     auto u_p = util::split(decode, ":");
                     if (u_p.size() < 2)
                     {
-                        PRINTFLOG(BL_ERROR, "%s de_base64-> %s,not found username and password"\
+                        PRINTFLOG(BL_ERROR, "%s de_base64-> %s,notfind found username and password"\
                             , data.c_str(), decode.c_str());
                         return HnwAuthorization();
                     }
@@ -636,7 +636,7 @@ namespace hnw
                 if (NoneAuth == auth.method)
                 {
                     //
-                    PRINTFLOG(BL_ERROR, "not support auth method NoneAuth");
+                    PRINTFLOG(BL_ERROR, "notfind support auth method NoneAuth");
                     return false;
                 }
                 std::string data;
@@ -669,7 +669,7 @@ namespace hnw
                 }
                 else
                 {
-                    PRINTFLOG(BL_ERROR, "not support auth method %d", auth.method);
+                    PRINTFLOG(BL_ERROR, "notfind support auth method %d", auth.method);
                     return false;
                 }
                 del_head(util::HTTP_AUTH);
@@ -702,7 +702,7 @@ namespace hnw
                 }
                 else
                 {
-                    PRINTFLOG(BL_ERROR, "not support auth method %d", auth.method);
+                    PRINTFLOG(BL_ERROR, "notfind support auth method %d", auth.method);
                     return false;
                 }
             }
