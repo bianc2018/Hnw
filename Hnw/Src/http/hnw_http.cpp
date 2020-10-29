@@ -54,6 +54,16 @@ HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Request(HNW_HANDLE handle, SPH
     return HNW_BASE_ERR_CODE::HNW_BASE_INVAILD_HANDLE;
 }
 
+HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_RequestGet(const std::string& url, HNW_ON_RESPONSE cb, size_t time_out_ms, SPHnwHttpHead ext_head)
+{
+    return service.request("GET",url,cb,"",time_out_ms,ext_head);
+}
+
+HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_RequestPost(const std::string& url, const std::string& body, HNW_ON_RESPONSE cb, size_t time_out_ms, SPHnwHttpHead ext_head)
+{
+    return service.request("POST", url, cb,body, time_out_ms, ext_head);
+}
+
 HNW_HTTP_EXPORT_SYMBOLS HNW_BASE_ERR_CODE HnwHttp_Response(HNW_HANDLE handle, SPHnwHttpResponse res)
 {
     auto sp = service.get_session(handle);

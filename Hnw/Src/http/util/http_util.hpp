@@ -6,7 +6,7 @@
 #define HNW_HTTP_UTIL_HPP_
 #include "define/parser.hpp"
 #include "../hnw_http.h"
-
+#include <string.h>
 #ifdef _WIN32
 #include "windows.h"
 #elif __linux__
@@ -15,11 +15,17 @@
 #include <iostream>
 #include <map>
 
+#include <ctime>
+#define random(a,b) (rand()%(b-a)+a)
+
 #include <boost/filesystem.hpp>
 #include <boost/locale.hpp>
 #include <boost/algorithm/hex.hpp>
 #include <boost/uuid/detail/md5.hpp>
 #include <boost/uuid/detail/sha1.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
@@ -716,6 +722,22 @@ namespace hnw
 				}
 			}
 			return "";//全是空格,应该不会到这里
+		}
+
+		//生成uuid
+		static const char UUCHAR[] = "abcHSklabeakebKJHKS";
+		std::string uuid()
+		{
+			//boost::uuids::uuid a_uuid = boost::uuids::random_generator()(); // 这里是两个() ，因为这里是调用的 () 的运算符重载
+			//return boost::uuids::to_string(a_uuid);
+			std::string result;
+			srand((int)time(0));  // 产生随机种子  把0换成NULL也行
+			for (int i = 0; i < 32; i++)
+			{
+				auto t = random(0, ::strlen(UUCHAR));
+				result += UUCHAR[t];
+			}
+			return result;
 		}
 	}
 }

@@ -89,7 +89,12 @@ namespace hnw
 								return HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL;
 							}
 						}
-
+						if (nullptr == tmp_->body)
+						{
+							PRINTFLOG(BL_ERROR, "body is empty");
+							EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL, "报文组装失败 body");
+							return HNW_BASE_ERR_CODE::HNW_HTTP_STRUCT_MESSAGE_FAIL;
+						}
 						if (tmp_->body->is_complete())
 						{
 							return push();

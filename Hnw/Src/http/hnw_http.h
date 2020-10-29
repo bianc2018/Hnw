@@ -334,6 +334,10 @@ public:
     virtual bool set_file_body(const std::string& path, \
         const HttpRange& req_range = HttpRange(),
         int flag = HTTP_FILE_FLAG_OPEN) = 0;
+
+    //save body as file
+    virtual bool save_body_as_file(const std::string& path,
+        int flag = HTTP_FILE_FLAG_OPEN) = 0;
 };
 typedef std::shared_ptr<HnwHttpResponse> SPHnwHttpResponse;
 

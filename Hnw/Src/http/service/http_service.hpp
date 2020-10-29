@@ -509,11 +509,11 @@ namespace hnw
                 return start(param, event_cb, handle);
             }
 
-            HNW_BASE_ERR_CODE request_get(
-                const std::string& url, HNW_ON_RESPONSE cb,
+            HNW_BASE_ERR_CODE request(const std::string& method,
+                const std::string& url, HNW_ON_RESPONSE cb, const std::string& body="",
                 size_t time_out_ms = 10000, SPHnwHttpHead ext_head = nullptr)
             {
-                HttpResourceStatus status;
+               /* HttpResourceStatus status;
                 status.host = util::get_host_for_url(url);
                 status.path = util::get_path_for_url(url);
                 if (status.path.empty())
@@ -525,23 +525,25 @@ namespace hnw
                         "get_resource_status %s get_host_for_url %s fail"
                         , url.c_str(), status.host.c_str());
                     return HNW_BASE_ERR_CODE::HNW_BASE_PARAMS_IS_INVALID;
-                }
+                }*/
+
                 HttpParam param;
                 param.host = url;
                 param.peer_type = Client;
 
                 HNW_HANDLE handle = HNW_INVALID_HANDLE;
-                HNW_EVENT_CB event_cb = std::bind(&Service::request_once,
-                    this, cb,
+                HNW_EVENT_CB event_cb = std::bind(&Service::on_request_once,
+                    this, cb, method, util::get_path_for_url(url),body, ext_head,
                     std::placeholders::_1,
                     std::placeholders::_2,
                     std::placeholders::_3);
-
+                
+               // return start(param, event_cb, handle);
                 auto ret = start(param, event_cb, handle);
                 if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
                     return ret;
-
-                //HnwBase_Config
+                //设置超时
+                return HnwBase_Config(handle, SET_RECV_TIME_OUT_MS, &time_out_ms, sizeof(time_out_ms));
             }
         private:
             //根据输入的协议类型选择基层通道类型
@@ -828,10 +830,46 @@ namespace hnw
             }
 
             //单次请求
-            void request_once(HNW_ON_RESPONSE cb,
+            void on_request_once(HNW_ON_RESPONSE cb,std::string method,std::string path,
+                const std::string& body, SPHnwHttpHead ext_head,
                 std::int64_t handle, int tt, std::shared_ptr<void> event_data)
             {
+                HNW_BASE_EVENT_TYPE type = (HNW_BASE_EVENT_TYPE)tt;
+                if (HNW_BASE_EVENT_TYPE::HNW_BASE_CONNECT_ESTABLISH == type)
+                {
+                    auto ret = HnwHttp_RawRequest(handle, method, path, body, ext_head);
+                    if (HNW_BASE_ERR_CODE::HNW_BASE_OK != ret)
+                    {
+                        if (cb)
+                        {
+                            cb(nullptr, ret);
+                        }
 
+                        HnwBase_Close(handle);
+                    }
+                }
+                else if (HNW_BASE_EVENT_TYPE::HNW_HTTP_RECV_RESPONSE == type)
+                {
+
+                    //记录
+                    auto response = PTR_CAST(HnwHttpResponse, event_data);
+                    if (cb)
+                    {
+                        cb(response, HNW_BASE_ERR_CODE::HNW_BASE_OK);
+                    }
+                    HnwBase_SetEvntCB(handle, nullptr);
+                    HnwBase_Close(handle);
+                }
+                else if (HNW_BASE_EVENT_TYPE::HNW_BASE_ERROR == type)
+                {
+                    auto error = PTR_CAST(HnwBaseErrorEvent, event_data);
+                    if (cb)
+                    {
+                        cb(nullptr, (HNW_BASE_ERR_CODE)error->code);
+                    }
+                    HnwBase_SetEvntCB(handle, nullptr);
+                    HnwBase_Close(handle);
+                }
             }
 
         public:

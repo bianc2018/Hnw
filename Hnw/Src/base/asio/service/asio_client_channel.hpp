@@ -212,11 +212,14 @@ namespace hnw
                         return HNW_BASE_ERR_CODE::HNW_BASE_ALLOC_FAIL;
                     }
                 }
-                auto timer = add_timer(recv_time_out_ms_, [this]()
+                
+                auto self = shared_from_this();
+
+                auto timer = add_timer(recv_time_out_ms_, [self,this]()
                     {
                         EVENT_ERR_CB(HNW_BASE_ERR_CODE::HNW_BASE_RECV_DATA_TIMEOUT, "recv data time out");
                     });
-                auto self = shared_from_this();
+                
                 auto recv_handler = [this, timer, self, buff, buff_len]\
                     (boost::system::error_code ec, size_t recv_len)
                 {

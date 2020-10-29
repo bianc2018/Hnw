@@ -23,7 +23,7 @@ namespace hnw
 				line = ResponseLineImpl::generate();
 				head = HeadImpl::generate();
 			//	body = RawBodyImpl::generate();
-				body = RawBodyImpl::generate();
+				//body = RawBodyImpl::generate();
 			}
 
 
@@ -43,7 +43,9 @@ namespace hnw
 				}
 				else
 				{
-					return false;
+					HttpRange range;
+					range.total = size;
+					body = FileBodyImpl::generate("./"+ util::uuid()+".HnwHttpTemp", range, HTTP_FILE_FLAG_DELETE|HTTP_FILE_FLAG_CREATE);
 				}
 				return true;
 			}
@@ -66,6 +68,31 @@ namespace hnw
 					return true;
 				}
 				return false;
+			}
+
+			//save body as file
+			virtual bool save_body_as_file(const std::string& path,
+				int flag = HTTP_FILE_FLAG_OPEN)
+			{
+				if (!body)
+					return false;
+
+				std::fstream file(path, std::ios::out | std::ios::binary);
+				if (!file)
+				{
+					return false;
+				}
+				const size_t buff_len = 2 * 1024;
+				char buff[buff_len] = { 0 };
+				while (true)
+				{
+					auto read_len = body->read_body(buff, buff_len);
+					if (read_len == 0)
+						break;
+					file.write(buff, buff_len);
+				}
+				file.close();
+				return true;
 			}
 		};
 	}

@@ -32,6 +32,9 @@ target_link_libraries(HnwHttpClient  HnwHttp ${DEFAULT_LIB})
 add_executable(HnwHttpServer "httpserver/main.cpp")
 target_link_libraries(HnwHttpServer  HnwHttp ${DEFAULT_LIB})
 
+add_executable(HnwFilesDownloader "FilesDownloader/FilesDownloader.cpp")
+target_link_libraries(HnwFilesDownloader  HnwHttp Boost::filesystem Boost::program_options ${DEFAULT_LIB})
+
 add_executable(HnwHttpGetResourceStatus "HttpResourceStatus/HttpResourceStatus.cpp")
 target_link_libraries(HnwHttpGetResourceStatus  HnwHttp ${DEFAULT_LIB})
 
