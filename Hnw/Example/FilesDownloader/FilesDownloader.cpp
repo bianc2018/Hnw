@@ -17,7 +17,7 @@
 /// <summary>
 /// 请求链接文件 一行一个链接
 /// </summary>
-static std::string urls_file="./urls.txt";
+static std::string urls_file="F:/picture/out/オリジナル10000users入り.txt";
 
 /// <summary>
 /// 请求集合
@@ -27,7 +27,7 @@ static std::vector<std::string> urls;
 /// <summary>
 /// 输出路径
 /// </summary>
-static std::string out_dir = "./output";
+static std::string out_dir = "F:/picture/out";
 
 /// <summary>
 /// 请求延时 毫秒
