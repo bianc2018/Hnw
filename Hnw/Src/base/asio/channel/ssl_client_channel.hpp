@@ -147,7 +147,7 @@ namespace hnw
                  //   socket_.close();
                     bconn_ = false;
                     PRINTFLOG(BL_DEBUG, "TcpClientChannel[%I64d] closed ", handle_);
-                    EVENT_CB_ASYNC(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED,nullptr);
+                    //EVENT_CB_ASYNC(HNW_BASE_EVENT_TYPE::HNW_BASE_CLOSED,nullptr);
                     return HNW_BASE_ERR_CODE::HNW_BASE_OK;
                 }
                 return HNW_BASE_ERR_CODE::HNW_BASE_EMPTY_SOCKET;
